@@ -23,12 +23,17 @@ def conform_url(url):
         response = requests.get(url)
         # preprocessing the url.
         return True
-    except requests.ConnectionError as exception:
+    except requests.exceptions.MissingSchema:
+        return False
+    except requests.ConnectionError:
         return False
 
 def main():
     print("Please provide a valid AllRecipes.com URL or type 'q' to quit the program")
     url = input()
+    if url.lower()=='q':
+        print("Bye!")
+        return
     continue_or_quit = conform_url(url)
     if continue_or_quit:
         response = requests.get(url)
@@ -54,3 +59,5 @@ def main():
     else:
         print("URL does not exist on Internet." )
         main()
+
+if __name__ == "__main__": main()
