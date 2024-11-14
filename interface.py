@@ -56,6 +56,13 @@ def main():
         
         # todo understand what user input and response with what we get from websites
 
+        user_input=input()
+        # 5 & 6. Simple "what is" questions. Specific "how to" questions
+        if "how" or "what" in user_input.lower():
+            reference_url="+".join(user_input.split(" "))
+            print("No worries. I found a reference for you: https://www.google.com/search?q=" + reference_url)
+        
+
     else:
         print("URL does not exist on Internet." )
         main()
