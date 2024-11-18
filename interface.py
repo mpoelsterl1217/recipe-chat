@@ -109,7 +109,7 @@ def main():
 
             # 2 exmaple
             num = extract_numbers_nltk(user_input)
-            if num and len(num)==1:
+            if num and len(num)==1 and not "how" in user_input and not "what" in user_input:
                 if "repeat" in num:
                     print(steps_list[current_step])
                     print()
