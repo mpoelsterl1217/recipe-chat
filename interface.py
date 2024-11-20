@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import nltk
 from nltk import word_tokenize, pos_tag
 import re
+from find_article import find_article
 
 def grab_info(response):
     # todo
@@ -69,9 +70,10 @@ def main():
         response = requests.get(url)
         ingredients_list, steps_list = grab_info(response)
         # 
-        print("Alright. So let's start working with the url. What do you want to do?")
+        print("Alright. So let's start working with your recipe. What do you want to do?")
         print("[1] Go over ingredients list ")
         print("[2] Go over recipe steps. ")
+        # print("[3] Ask a question about the recipe")
 
         while True:
             num=input()
@@ -155,6 +157,7 @@ def main():
 
 
             # 4 & 5 & 6. Simple "what is" questions. Specific "how to" questions
+            # ["how do i", "how might i", "how can i", "what can i", "what is", "how long does it take to", "what does __ mean"]
             if "how to" in user_input.lower() or "what is" in user_input.lower():
                 # print("4,5,6")
 
@@ -162,16 +165,22 @@ def main():
                 if "how to" in user_input.lower() and ("that" in user_input.lower() or "this" in user_input.lower() or "these" in user_input.lower() or "those" in user_input.lower()):
                     reference_url = respond_history[-1]
                     reference_url="+".join(reference_url.split(" "))
-                    print("No worries. I found a reference for you: https://www.google.com/search?q=how+to+" + reference_url)
+                    # should we get the first article that comes up or just search on google directly??
+                    print("No worries. I found a reference for you: " + find_article(user_input))
+                    # print("Would you like me to find a video or another reference?")
+                    # answer = input()
+                    # if answer == "yes"
+                    # 
                     print()
                     continue
             
                 reference_url="+".join(user_input.split(" "))
-                print("No worries. I found a reference for you: https://www.google.com/search?q=" + reference_url)
+                print("No worries. I found a reference for you: " + find_article(user_input))
                 print()
                 continue
             
             # invaild input
+            # print("I'm sorry, I don't understand. Can you rephrase your input?")
             print("Please provide an vaild input !")
             print()
 
