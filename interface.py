@@ -81,7 +81,7 @@ def format_ingredients_request(ingredients):
     response += "\nWhat else would you like to know?"
     return response
 
-def main():
+def main1():
     # input_history = []
     # respond_history = []
     # current_step = 0
@@ -125,16 +125,16 @@ def main():
             print("current input:", user_input)
             input_history.append(user_input)
             # 1 example
-            if "show me the ingredients list" in user_input:
-                print(ingredients_list)
-                print()
-                respond_history.append(ingredients_list)
-                continue
+            # if "show me the ingredients list" in user_input:
+            #     print(ingredients_list)
+            #     print()
+            #     respond_history.append(ingredients_list)
+            #     continue
         
-            if "show me the step" in user_input or "show me the recipe steps" in user_input:
-                print(steps_list)
-                print()
-                respond_history.append(steps_list)
+            # if "show me the step" in user_input or "show me the recipe steps" in user_input:
+            #     print(steps_list)
+            #     print()
+            #     respond_history.append(steps_list)
 
             # 2 exmaple
             num = extract_numbers_nltk(user_input)
@@ -153,15 +153,15 @@ def main():
                             current_step -=1
                             print(steps_list[current_step])
                             print()
-                    elif "next" in num:
-                        if current_step + 1 >= len(steps_list):
-                            print("no next step")
-                            print()
-                            continue
-                        else:
-                            current_step +=1
-                            print(steps_list[current_step])
-                            print()
+                    # elif "next" in num:
+                    #     if current_step + 1 >= len(steps_list):
+                    #         print("no next step")
+                    #         print()
+                    #         continue
+                    #     else:
+                    #         current_step +=1
+                    #         print(steps_list[current_step])
+                    #         print()
                     elif "repeat" in num or "current" in num:
                         print(steps_list[current_step])
                         print()
@@ -274,6 +274,7 @@ def get_chatbot_response(user_input, model):
     inquiries = ["how do i", "how might i", "how can i", "what can i", "what is", "how long does it take to", "what does __ mean"]
     next_step_asks = ["next step"]
     first_step_asks = ["1st step", "first step", "where do i begin", "how do i start", "tell me how to start"]
+    all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
 
     if any(asks in user_input for asks in first_step_asks):
         model.in_steps = True
@@ -290,6 +291,11 @@ def get_chatbot_response(user_input, model):
         else:
             output = "The next step is: " + model.steps_list[model.current_step + 1].text
             model.current_step += 1
+
+    elif any(asks in user_input for asks in all_step_asks):
+        output = "Sure. The steps list is as follows:\n"
+        for step in model.steps_list:
+            output += step.text + "\n"
 
     elif any(inquiry in user_input for inquiry in inquiries):
         if user_input[-1] == "?":
@@ -319,7 +325,7 @@ def get_chatbot_response(user_input, model):
     return model
 
 
-def main1():
+def main():
 
     print()
     print("Hello! My name is Dirk. Let's get you started!")
@@ -345,4 +351,4 @@ def main1():
         model = get_chatbot_response(user_input, model)
 
 
-if __name__ == "__main__": main1()
+if __name__ == "__main__": main()

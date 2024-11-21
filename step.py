@@ -17,9 +17,8 @@ class Step:
         self.step_num = snum
         self.text = text
         self.details = {}
-        # TIME
         self.time = get_times(text)
-        # TEMPERATURE
+        # TODO: TEMPERATURE
         if ingredients != []:
             self.details["ingredients"] = ingredients
         if tools != []:
