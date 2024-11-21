@@ -2,6 +2,7 @@ import nltk
 import spacy
 from nltk.corpus import wordnet as wn
 from lists import in_tools_list, in_verbs_list
+from spacy.matcher import Matcher
 # from verbnet import VerbNet
 
 nltk.download('wordnet')
@@ -17,7 +18,7 @@ class Step:
         self.text = text
         self.details = {}
         # TIME
-        self.time = None
+        self.time = get_times(text)
         # TEMPERATURE
         if ingredients != []:
             self.details["ingredients"] = ingredients
@@ -83,6 +84,26 @@ def is_cooking_tool(word):
             if "tool" in hypernym.name() or "utensil" in hypernym.name() or "instrument" in hypernym.name():
                 return word
             
+def get_times(text):
+
+    doc = nlp(text)
+    matcher = Matcher(nlp.vocab)
+
+    # TODO: handle numbers as words
+    time_patterns = [
+        [{"TEXT": {"REGEX": r"^\d+$"}}, {"LOWER": {"IN": ["hour", "hours", "minute", "minutes", "second", "seconds"]}}],
+        [{"TEXT": {"REGEX": r"^\d+$"}}, {"LOWER": {"IN": ["to", "-", "–"]}}, {"TEXT": {"REGEX": r"^\d+$"}}, {"LOWER": {"IN": ["hour", "hours", "minute", "minutes", "second", "seconds"]}}],
+        [{"LOWER": {"IN": ["a", "few", "several"]}}, {"LOWER": {"IN": ["hour", "hours", "minute", "minutes", "second", "seconds"]}}],
+    ]
+
+    matcher.add("TIME", time_patterns)
+    matches = matcher(doc)
+
+    # TODO: handle multiple time mentions in one step
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        return span.text
+                
 def clean_nouns(words, doc):
     words = set(words)
     result = []
