@@ -13,9 +13,17 @@ def parse_ingredient(ingredient_text):
     match = ingredient_regex.match(ingredient_text)
     if match:
         return {
+            "text": ingredient_text,
             "amount": match.group("amount"),
             "unit": match.group("unit"),
             "ingredient": match.group("ingredient")
+        }
+    else:
+        return {
+            "text": ingredient_text,
+            "amount": None,
+            "unit": None,
+            "ingredient": None
         }
     
 def parse_ingredients(ingredients):
@@ -24,18 +32,18 @@ def parse_ingredients(ingredients):
         result.append(parse_ingredient(ingredient))
     return result
     
-ingredients = ["1 cup salted butter softened",
-    "1 cup granulated sugar",
-    "1 cup light brown sugar packed",
-    "2 teaspoons pure vanilla extract",
-    "2 large eggs",
-    "3 cups all-purpose flour",
-    "1 teaspoon baking soda",
-    "½ teaspoon baking powder",
-    "1 teaspoon sea salt",
-    "2 cups chocolate chips (14 oz)"
-]
+# ingredients = ["1 cup salted butter softened",
+#     "1 cup granulated sugar",
+#     "1 cup light brown sugar packed",
+#     "2 teaspoons pure vanilla extract",
+#     "2 large eggs",
+#     "3 cups all-purpose flour",
+#     "1 teaspoon baking soda",
+#     "½ teaspoon baking powder",
+#     "1 teaspoon sea salt",
+#     "2 cups chocolate chips (14 oz)"
+# ]
 
-final = parse_ingredients(ingredients)
-for i in final:
-    print(i)
+# final = parse_ingredients(ingredients)
+# for i in final:
+#     print(i)
