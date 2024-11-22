@@ -54,6 +54,36 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk import pos_tag
 import unicodedata
+from nltk.corpus import wordnet as wn
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+lemmatizer = WordNetLemmatizer()
+
+units = [
+        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove", "can",
+        "slice", "gram", "g", "kg", "milligram", "mg", "milliliter", "ml", "liter", "l",
+        "oz", "fluid ounce", "fl oz", "quart", "qt", "pint", "pt", "gallon", "gal",
+        "stick", "dash", "drop", "handful", "package", "bag", "packet", "bar", "bottle",
+        "head", "stalk", "bunch", "sheet", "piece", "sprig", "strip", "cube"
+    ]
+
+preparation_terms = [
+    "dice", "mince", "chop", "shred", "grate", "slice", "cut", "soften",
+    "julienne", "peel", "crush", "roast", "bake", "steam", "fry", "boil", 
+    "sauté", "stir-fry", "broil", "caramelize", "poach", "grill", "braise",
+    "blanch", "whisk", "whip", "knead", "fold", "sear", "toast", "marinate",
+    "blend", "purée", "press", "zest", "scald", "deglaze", "mince", "minced"
+]
+
+descriptors_terms = [
+    "freshly", "ripe", "salted", "extra-virgin", "smoked", "spicy", "sweet",
+    "savory", "organic", "ripe", "roasted", "unsalted", "creamy", "aged",
+    "mature", "light", "dark", "fermented", "powdered", "ground", "dried",
+    "pickled", "raw", "whole", "chilled", "frozen", "canned", "boiled",
+    "toasted", "browned", "grated", "sifted", "softened", "dehydrated", "boneless"
+]
 
 def fraction_verify(word):
     if len(word)!=1:
@@ -66,36 +96,11 @@ def fraction_verify(word):
 
 def parse_ingredient(line):
     # Tokenize and tag the input line
+
     line = line.lower()
+    doc = nlp(line)
     tokens = word_tokenize(line)
     tagged = pos_tag(tokens)
-
-    lemmatizer = WordNetLemmatizer()
-    
-    # Define common units and preparation terms
-    units = [
-        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove", "can",
-        "slice", "gram", "g", "kg", "milligram", "mg", "milliliter", "ml", "liter", "l",
-        "oz", "fluid ounce", "fl oz", "quart", "qt", "pint", "pt", "gallon", "gal",
-        "stick", "dash", "drop", "handful", "package", "bag", "packet", "bar", "bottle",
-        "head", "stalk", "bunch", "sheet", "piece", "sprig", "strip", "cube"
-    ]
-    
-    preparation_terms = [
-        "dice", "mince", "chop", "shred", "grate", "slice", "cut", "soften",
-        "julienne", "peel", "crush", "roast", "bake", "steam", "fry", "boil", 
-        "sauté", "stir-fry", "broil", "caramelize", "poach", "grill", "braise",
-        "blanch", "whisk", "whip", "knead", "fold", "sear", "toast", "marinate",
-        "blend", "purée", "press", "zest", "scald", "deglaze"
-    ]
-
-    descriptors_terms = [
-        "freshly", "ripe", "salted", "extra-virgin", "smoked", "spicy", "sweet",
-        "savory", "organic", "ripe", "roasted", "unsalted", "creamy", "aged",
-        "mature", "light", "dark", "fermented", "powdered", "ground", "dried",
-        "pickled", "raw", "whole", "chilled", "frozen", "canned", "boiled",
-        "toasted", "browned", "grated", "sifted", "softened", "dehydrated"
-    ]
 
     preparations = []
     descriptors = []
@@ -122,20 +127,25 @@ def parse_ingredient(line):
     
     # Extract descriptors (adjectives or specific terms like "salted")
     for word, tag in tagged:
-        if (tag == "JJ" or word.lower() in descriptors_terms) and not fraction_verify(word):
+        if (tag == "JJ" and word.lower() in descriptors_terms) and not fraction_verify(word):
             descriptors.append(word)
     
     # Exclude found tokens to isolate the ingredient name
+    name = []
     exclude = set(quantity + measurement + preparations + descriptors)
     for word in tokens:
-        if (word not in exclude) and (not re.match(r'[^\w\s]', word)):
-            ingredient_name.append(word)
+        if (word not in exclude) and (not re.match(r'[^\w\s]', word)) and is_food(word):
+            name.append(word)
+    
+    print(name)
+    ingredient_name = list(set(clean_nouns(name, doc)))
+
     
     return {
         "quantity": quantity if quantity else None,
         "measurement": measurement if measurement else None,
         "descriptor": descriptors if descriptors else None,
-        "ingredient_name": (" ").join(ingredient_name) if ingredient_name else None,
+        "ingredient_name": ingredient_name if ingredient_name else None,
         "preparation": preparations if preparations else None
     }
 
@@ -145,6 +155,27 @@ def parse_ingredients(ingredients):
         result.append(parse_ingredient(ingredient))
     return result
 
+def is_food(word):
+    lemmatizer = WordNetLemmatizer()
+    lemma = lemmatizer.lemmatize(word)
+    syns = wn.synsets(word, pos = wn.NOUN)
+    for syn in syns:
+        if 'food' in syn.lexname() and (not lemma in units):
+            return word
+
+def clean_nouns(words, doc):
+    words = set(words)
+    result = []
+    for word in words:
+        # print("NOUN CHUNK:", chunk)
+        found = False
+        for chunk in doc.noun_chunks:
+            if word in chunk.text:
+                result.append(chunk.text)
+                found = True
+        if not found:
+            result.append(word)
+    return result
 
 # ingredients = ["1 cup salted butter softened",
 #     "1 cup granulated sugar",
@@ -163,3 +194,6 @@ def parse_ingredients(ingredients):
 #     print(i)
 #     print(final)
 #     print()
+
+final = parse_ingredient("2 cloves garlic, minced")
+print(final)

@@ -37,7 +37,7 @@ def grab_info(response):
         print("Sorry, something seems to be going wrong. I'm having trouble finding the steps for this recipe. Feel free to ask questions about the ingredients or restart the program with a new url.")
         steps_list = None
         
-    print("Hello!!")
+    # print("Hello!!")
 
     for i in steps:
         # Pre-split text by semicolons before applying sent_tokenize
@@ -45,7 +45,7 @@ def grab_info(response):
         for part in semi_split:
             sentences = sent_tokenize(part.strip())  # Strip whitespace and tokenize
             for j in sentences:
-                steps_list.append(Step(num, j.strip()))  # Remove extra spaces
+                steps_list.append(Step(num, j.strip(), ingredients_list))  # Remove extra spaces
                 num += 1
 
     for i in steps_list:

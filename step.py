@@ -18,9 +18,9 @@ units = [
     ]
 
 class Step:
-    def __init__(self, snum, text):
+    def __init__(self, snum, text, ingredients_list):
         
-        ingredients, tools, actions, time, temp = parse_step(text.lower())
+        ingredients, tools, actions, time, temp = parse_step(text.lower(), ingredients_list)
         
         self.step_num = snum
         self.text = text
@@ -41,7 +41,7 @@ class Step:
     def __str__(self):
         return str(self.snum) + self.text # + str(self.details)
 
-def parse_step(text):
+def parse_step(text, ingredients_list):
 
     # nlp.add_pipe("merge_noun_chunks")
     doc = nlp(text)
@@ -51,11 +51,10 @@ def parse_step(text):
     for ent in doc:
         # print(ent)
         word = ent.text
-        # if word=="mix":
-        #     print("mix  ", ent.pos_)
-        #     print(not in_verbs_list(word))
-        if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)):
-            # if word=="mix":
+        # if word=="oven":
+        #     print("oven  ", ent.pos_)
+        if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)) or in_tools_list(word) :
+            # if word=="oven":
             #     print("waitQ")
             if is_food(word):
                 ingredients.append(word)
@@ -66,11 +65,15 @@ def parse_step(text):
                 actions.append(word)
                 # print(f"Verb: {ent.text}, Object(s): {[child.text for child in ent.children if child.dep_ == 'dobj']}")
     # print("FOOD", [ent.text for ent in doc if ent.label_ in ["PRODUCT", "FOOD"]])
+
     final_ingredients=[]
-    # print(ingredients)
-    for i in set(clean_nouns(ingredients, doc)):
-        # print(i)
-        final_ingredients.append(parse_ingredient(i))
+    
+    for i in set(ingredients):
+        for ingredient in ingredients_list:
+            for j in ingredient.get("ingredient_name",""):
+                if i in j:
+                    final_ingredients.append(ingredient)
+
     tools = list(set(clean_nouns(tools, doc)))
     actions = list(set(actions))
     time = get_times(text.lower())
@@ -157,7 +160,7 @@ def clean_nouns(words, doc):
             result.append(word)
     return result
 
-test = Step(1, "Mix cream of mushroom soup and diced tomatoes with green chile peppers into chicken mixture.")
+test = Step(1, "Place the skillet in the preheated oven and bake until cheese is melted and slightly brown, 15 to 20 minutes.",[])
 
 print(test.details)
 print(test.text)
