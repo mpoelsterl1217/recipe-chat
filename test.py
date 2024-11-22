@@ -1,55 +1,97 @@
-# import requests
-# from bs4 import BeautifulSoup
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk import pos_tag
 
-# response = requests.get("https://www.allrecipes.com/roasted-butternut-squash-and-spinach-lasagna-recipe-7563610")
-# # response = requests.get("https://www.allrecipes.com/recipe/218091/classic-and-simple-meat-lasagna/")
-
-# # print(response.content)
-
-# soup = BeautifulSoup(response.content, "html.parser")
-# elements=soup.find_all(class_='mm-recipes-structured-ingredients__list-item')
-
-# for i in elements:
-#     print(i.text)
-
-# elements=soup.find_all(class_='comp mntl-sc-block mntl-sc-block-html')
-# for i in elements:
-#     print(i.text)
-
-
-# import nltk
-# from nltk import word_tokenize, pos_tag
-
-# def extract_numbers_nltk(text):
-#     tokens = word_tokenize(text)
-#     pos_tags = pos_tag(tokens)
-#     numbers = []
-#     for word, tag in pos_tags:
-#         if tag == "CD" or word.lower() in {"next", "previous"}:
-#             numbers.append(word)
-#     return numbers
-
-# # 示例
-# text = "We 1ST"
-# num = extract_numbers_nltk(text)
-# if num and len(num)==1:
-#     print("fuck")
-# print(extract_numbers_nltk(text))
-# # 输出: ['one', '2nd', 'previous']
-
-# import re
-
-import re
-
-def extract_number(text):
-    # Regex to match numbers at the beginning of the string
-    match = re.match(r"(\d+)", text)
-    if match:
-        return int(match.group(1))  # Convert to integer if needed
-    return None
+def extract_ingredient_details_nltk(line):
+    # Tokenize and tag the input line
+    tokens = word_tokenize(line)
+    tagged = pos_tag(tokens)
+    
+    # Define common units and preparation terms
+    units = [
+        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove",
+        "can", "slice", "gram", "ml", "liter", "kg"
+    ]
+    preparation_terms = ["diced", "minced", "chopped", "shredded", "grated", "sliced", "cut", "softened"]
+    
+    # Extract quantity (numbers or fractions)
+    quantity = next((word for word, tag in tagged if tag == "CD" or word.isdigit() or "½" in word), None)
+    
+    # Extract measurement (including plural forms)
+    measurement = next((word for word in tokens if word.lower().rstrip('s') in units), None)
+    
+    # Extract preparation details (terms like softened)
+    preparation = next((word for word in tokens if word.lower() in preparation_terms), None)
+    
+    # Extract descriptors (adjectives or specific terms like "salted")
+    descriptors = [word for word, tag in tagged if tag == "JJ" or word.lower() in ["freshly", "ripe", "salted", "extra-virgin"]]
+    
+    # Exclude found tokens to isolate the ingredient name
+    exclude = [quantity, measurement, preparation] + descriptors
+    ingredient_name = " ".join([word for word in tokens if word not in exclude]).strip(", ")
+    
+    # In case there are multiple components in the name (like "Salted Butter"), we should keep the first word as descriptor
+    if ingredient_name.lower() == "butter" and descriptors:
+        ingredient_name = "Butter"
+    
+    return {
+        "quantity": quantity,
+        "measurement": measurement if measurement else None,
+        "descriptor": ", ".join(descriptors) if descriptors else None,
+        "ingredient_name": ingredient_name.title(),
+        "preparation": preparation
+    }
 
 # Test cases
-examples = ["1st", "2nd", "3rd", "4th", "25th", "100th", "not-a-number", "1"]
+ingredient_lines = [
+    "1 cup salted butter softened",
+    "1 cup granulated sugar",
+    "1 cup light brown sugar packed",
+    "2 teaspoons pure vanilla extract",
+    "2 large eggs",
+    "3 cups all-purpose flour",
+    "1 teaspoon baking soda",
+    "½ teaspoon baking powder",
+    "1 teaspoon sea salt",
+    "2 cups chocolate chips (14 oz)"
+]
 
-for example in examples:
-    print(f"{example} -> {extract_number(example)}")
+# Extracting details for each ingredient line
+parsed_ingredients = [extract_ingredient_details_nltk(line) for line in ingredient_lines]
+
+# Display results
+for i in parsed_ingredients:
+    print(i)
+
+# import nltk
+# import spacy
+# from nltk.corpus import wordnet as wn
+# from lists import in_tools_list, in_verbs_list
+# from spacy.matcher import Matcher
+# # from verbnet import VerbNet
+# import re
+
+# nltk.download('wordnet')
+# nlp = spacy.load("en_core_web_sm")
+
+
+# def extract_temperature(text):
+#     # Define the regex pattern
+#     pattern = r"(\d+)\s*(°|degrees)?\s*(F|C|f|c|Fahrenheit|Celsius|fahrenheit|celsius)"
+    
+#     # Find all matches
+#     matches = re.findall(pattern, text)
+    
+#     # Process matches into a list of dictionaries
+#     temperatures = []
+#     for match in matches:
+#         value = int(match[0])  # The numeric part
+#         unit = match[2].lower()  # The unit part
+#         temperatures.append({"value": value, "unit": unit})
+    
+#     return temperatures
+
+# print(extract_temperature("35 degrees f"))
+
+
+

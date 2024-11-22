@@ -1,8 +1,10 @@
 import nltk
 import spacy
+import re
 from nltk.corpus import wordnet as wn
 from lists import in_tools_list, in_verbs_list
 from spacy.matcher import Matcher
+from parse_ingredients import parse_ingredient
 # from verbnet import VerbNet
 
 nltk.download('wordnet')
@@ -12,19 +14,22 @@ nlp = spacy.load("en_core_web_sm")
 class Step:
     def __init__(self, snum, text):
         
-        ingredients, tools, actions = parse_step(text.lower())
+        ingredients, tools, actions, time, temp = parse_step(text.lower())
         
         self.step_num = snum
         self.text = text
         self.details = {}
-        self.time = get_times(text)
-        # TODO: TEMPERATURE
+        # self.time = get_times(text)
         if ingredients != []:
             self.details["ingredients"] = ingredients
         if tools != []:
             self.details["tools"] = tools
         if actions != []:
             self.details["actions"] = actions
+        if time != None:
+            self.details["time"] = time
+        if temp !=[]:
+            self.details["temp"] = temp
         # print(self.details)
 
     def __str__(self):
@@ -35,7 +40,7 @@ def parse_step(text):
     # nlp.add_pipe("merge_noun_chunks")
     doc = nlp(text)
 
-    ingredients, actions, tools = [], [], []
+    ingredients, actions, tools, time, temp = [], [], [], [], []
     # print("doc", doc)
     for ent in doc:
         # print(ent)
@@ -50,10 +55,14 @@ def parse_step(text):
                 actions.append(word)
                 # print(f"Verb: {ent.text}, Object(s): {[child.text for child in ent.children if child.dep_ == 'dobj']}")
     # print("FOOD", [ent.text for ent in doc if ent.label_ in ["PRODUCT", "FOOD"]])
-    ingredients = list(set(clean_nouns(ingredients, doc)))
+    final_ingredients=[]
+    for i in clean_nouns(ingredients, doc):
+        final_ingredients.append(parse_ingredient(i))
     tools = list(set(clean_nouns(tools, doc)))
     actions = list(set(actions))
-    return ingredients, tools, actions
+    time = get_times(text.lower())
+    temp = list(extract_temperature(text.lower()))
+    return final_ingredients, tools, actions, time, temp
 
 def is_food(word):
     syns = wn.synsets(word, pos = wn.NOUN)
@@ -102,7 +111,23 @@ def get_times(text):
     for match_id, start, end in matches:
         span = doc[start:end]
         return span.text
-                
+
+def extract_temperature(text):
+    # Define the regex pattern
+    pattern = r"(\d+)\s*(°|degrees)?\s*(F|C|f|c|Fahrenheit|Celsius|fahrenheit|celsius)"
+    
+    # Find all matches
+    matches = re.findall(pattern, text)
+    
+    # Process matches into a list of dictionaries
+    temperatures = []
+    for match in matches:
+        value = int(match[0])  # The numeric part
+        unit = match[2].lower()  # The unit part
+        temperatures.append({"value": value, "unit": unit})
+    
+    return temperatures
+           
 def clean_nouns(words, doc):
     words = set(words)
     result = []
@@ -117,4 +142,8 @@ def clean_nouns(words, doc):
             result.append(word)
     return result
 
-# Step(1, "Grease the bowl with butter. Place the dough back into the bowl, cover, and let rise for 30 minutes. Get ice cream from the sharp knife.")
+# test = Step(1, "Grease the bowl with butter. Place the dough back into the bowl, cover, and let rise for 30 minutes. Get ice cream from the sharp knife.")
+
+# print(test.details)
+# print(test.text)
+# print(test.step_num)

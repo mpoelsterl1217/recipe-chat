@@ -1,36 +1,36 @@
-import re
+# import re
 
-pattern = r"""
-    (?P<amount>\d+(\.\d+)?\s?(?:\d+/\d+|[½⅓⅔¼¾⅛⅜⅝⅞])?(?:\s?-\s?\d+(\.\d+)?(?:\s?/\d+|[½⅓⅔¼¾⅛⅜⅝⅞])?)?)\s*  # amount
-    (?:(?P<unit>cups?|tbsp|tsp|tablespoons?|teaspoons?|grams?|g|oz|ounces?|ml|milliliters?|liters?|lbs?|pounds?|kg|kilograms?|pieces?)\.?\s*)? # optional unit
-    (?P<ingredient>[A-Za-z\s-]+)  # ingredient name
-    # (?:,\s?(?P<descriptor>[A-Za-z\s-]+))?  # optional descriptor
-"""
+# pattern = r"""
+#     (?P<amount>\d+(\.\d+)?\s?(?:\d+/\d+|[½⅓⅔¼¾⅛⅜⅝⅞])?(?:\s?-\s?\d+(\.\d+)?(?:\s?/\d+|[½⅓⅔¼¾⅛⅜⅝⅞])?)?)\s*  # amount
+#     (?:(?P<unit>cups?|tbsp|tsp|tablespoons?|teaspoons?|grams?|g|oz|ounces?|ml|milliliters?|liters?|lbs?|pounds?|kg|kilograms?|pieces?)\.?\s*)? # optional unit
+#     (?P<ingredient>[A-Za-z\s-]+)  # ingredient name
+#     # (?:,\s?(?P<descriptor>[A-Za-z\s-]+))?  # optional descriptor
+# """
 
-ingredient_regex = re.compile(pattern, re.VERBOSE)
+# ingredient_regex = re.compile(pattern, re.VERBOSE)
 
-def parse_ingredient(ingredient_text):
-    match = ingredient_regex.match(ingredient_text)
-    if match:
-        return {
-            "text": ingredient_text,
-            "amount": match.group("amount"),
-            "unit": match.group("unit"),
-            "ingredient": match.group("ingredient")
-        }
-    else:
-        return {
-            "text": ingredient_text,
-            "amount": None,
-            "unit": None,
-            "ingredient": None
-        }
+# def parse_ingredient(ingredient_text):
+#     match = ingredient_regex.match(ingredient_text)
+#     if match:
+#         return {
+#             "text": ingredient_text,
+#             "amount": match.group("amount"),
+#             "unit": match.group("unit"),
+#             "ingredient": match.group("ingredient")
+#         }
+#     else:
+#         return {
+#             "text": ingredient_text,
+#             "amount": None,
+#             "unit": None,
+#             "ingredient": None
+#         }
     
-def parse_ingredients(ingredients):
-    result = []
-    for ingredient in ingredients:
-        result.append(parse_ingredient(ingredient))
-    return result
+# def parse_ingredients(ingredients):
+#     result = []
+#     for ingredient in ingredients:
+#         result.append(parse_ingredient(ingredient))
+#     return result
     
 # ingredients = ["1 cup salted butter softened",
 #     "1 cup granulated sugar",
@@ -47,3 +47,102 @@ def parse_ingredients(ingredients):
 # final = parse_ingredients(ingredients)
 # for i in final:
 #     print(i)
+
+import re
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk import pos_tag
+import unicodedata
+
+def fraction_verify(word):
+    if len(word)!=1:
+        return False
+    name = unicodedata.name(word)
+    if name.startswith('VULGAR FRACTION'):
+        return True
+    else:
+        return False
+
+def parse_ingredient(line):
+    # Tokenize and tag the input line
+    line = line.lower()
+    tokens = word_tokenize(line)
+    tagged = pos_tag(tokens)
+
+    lemmatizer = WordNetLemmatizer()
+    
+    # Define common units and preparation terms
+    units = [
+        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove",
+        "can", "slice", "gram", "ml", "liter", "kg", "oz"
+    ]
+    preparation_terms = ["dice", "mince", "chop", "shred", "grate", "slice", "cut", "soften"]
+    descriptors_terms = ["freshly", "ripe", "salted", "extra-virgin"]
+
+    preparations = []
+    descriptors = []
+    ingredient_name = []
+    quantity = []
+    measurement = []
+    # Extract quantity (numbers or fractions)
+    for word, tag in tagged:
+        match = re.match(r"(\d+/\d+|\d*\.\d+|\d+)", word)
+        if tag == "CD" or word.isdigit() or fraction_verify(word) or match:
+            quantity.append(word)
+    
+    # Extract measurement (including plural forms)
+    for word in tokens:
+        lemma = lemmatizer.lemmatize(word)  # Normalize the token to singular form
+        if lemma in units:
+            measurement.append(word)
+    
+    # Extract preparation details (terms like softened)
+    for word in tokens:
+        lemma = lemmatizer.lemmatize(word)
+        if lemma in preparation_terms:
+            preparations.append(word)
+    
+    # Extract descriptors (adjectives or specific terms like "salted")
+    for word, tag in tagged:
+        if (tag == "JJ" or word.lower() in descriptors_terms) and not fraction_verify(word):
+            descriptors.append(word)
+    
+    # Exclude found tokens to isolate the ingredient name
+    exclude = set(quantity + measurement + preparations + descriptors)
+    for word in tokens:
+        if (word not in exclude) and (not re.match(r'[^\w\s]', word)):
+            ingredient_name.append(word)
+    
+    return {
+        "quantity": quantity if quantity else None,
+        "measurement": measurement if measurement else None,
+        "descriptor": descriptors if descriptors else None,
+        "ingredient_name": (" ").join(ingredient_name) if ingredient_name else None,
+        "preparation": preparations if preparations else None
+    }
+
+def parse_ingredients(ingredients):
+    result = []
+    for ingredient in ingredients:
+        result.append(parse_ingredient(ingredient))
+    return result
+
+
+# ingredients = ["1 cup salted butter softened",
+#     "1 cup granulated sugar",
+#     "1 cup light brown sugar packed",
+#     "2 teaspoons pure vanilla extract",
+#     "2 large eggs",
+#     "3 cups all-purpose flour",
+#     "1 teaspoon baking soda",
+#     "½ teaspoon baking powder",
+#     "1 teaspoon sea salt",
+#     "2 cups chocolate chips (14 oz)"
+# ]
+
+# for i in ingredients:
+#     final = parse_ingredient(i)
+#     print(i)
+#     print(final)
+#     print()

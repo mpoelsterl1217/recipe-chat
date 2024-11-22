@@ -7,6 +7,7 @@ from find_article import find_article
 from step import Step
 from parse_ingredients import parse_ingredients
 from model_state import State
+from nltk.tokenize import sent_tokenize
 
 def grab_info(response):
     # todo
@@ -35,9 +36,16 @@ def grab_info(response):
     if len(steps) == 0:
         print("Sorry, something seems to be going wrong. I'm having trouble finding the steps for this recipe. Feel free to ask questions about the ingredients or restart the program with a new url.")
         steps_list = None
+    print("Hello!!")
     for i in steps:
-        steps_list.append(Step(num, i.text))
-        num += 1
+        sentences = sent_tokenize(i.text)
+        for j in sentences:
+            steps_list.append(Step(num, j))
+            num += 1
+    for i in steps_list:
+        print(i.text)
+        print(i.details)
+        print()
     # steps_list.pop(0)
     # steps_list = [item.strip() for item in steps_list]
     # steps_list = [item for item in steps_list if item != ""] 
