@@ -1,25 +1,23 @@
 from nltk.parse.stanford import StanfordParser
 import nltk
 from ingredient import Ingredient
-
-def get_stanford_parser():
-    parser_path = "stanford-corenlp-4.5.7/stanford-corenlp-4.5.7.jar"
-    model_path = "stanford-corenlp-4.5.7/stanford-corenlp-4.5.7-models.jar"
-
-    server = nltk.parse.corenlp.CoreNLPServer(path_to_jar=parser_path, path_to_models_jar=model_path)
-    server.start()
-    parser = nltk.parse.corenlp.CoreNLPParser(url='http://localhost:9000')
-
-    return parser
+from pathlib import Path
+import subprocess
 
 
 class IngredientParser:
 
     def __init__(self):
-        parser_path = "stanford-corenlp-4.5.7/stanford-corenlp-4.5.7.jar"
-        model_path = "stanford-corenlp-4.5.7/stanford-corenlp-4.5.7-models.jar"
+        parser_path = Path("stanford-corenlp-4.5.7/stanford-corenlp-4.5.7.jar")
+        model_path = Path("stanford-corenlp-4.5.7/stanford-corenlp-4.5.7-models.jar")
 
-        self.server = nltk.parse.corenlp.CoreNLPServer(path_to_jar=parser_path, path_to_models_jar=model_path)
+        if not (parser_path.exists() and model_path.exists()):
+            ## Download stanford coreNLP
+            print("Need to download Stanford CoreNLP")
+            subprocess.run("curl https://downloads.cs.stanford.edu/nlp/software/stanford-corenlp-4.5.7.zip -o stanford-corenlp-4.5.7.zip", shell=True)
+            subprocess.run("unzip stanford-corenlp-4.5.7.zip", shell=True)
+
+        self.server = nltk.parse.corenlp.CoreNLPServer(path_to_jar=str(parser_path), path_to_models_jar=str(model_path))
         self.server.start()
         self.parser = nltk.parse.corenlp.CoreNLPParser(url='http://localhost:9000')
 
