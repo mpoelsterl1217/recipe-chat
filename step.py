@@ -44,7 +44,7 @@ class Step:
         # print(self.details)
 
     def __str__(self):
-        return str(self.snum) + self.text # + str(self.details)
+        return str(self.step_num) + self.text # + str(self.details)
 
 def parse_step(text, ingredients_list):
     # print(ingredients_list)
