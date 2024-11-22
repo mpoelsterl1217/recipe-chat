@@ -321,7 +321,7 @@ def get_chatbot_response(user_input, model):
             output = f"Sorry, there are only {len(model.steps_list)} steps."
         else:
             model.current_step = step_num - 1
-            output = f"The {matches.group("ordinal")} step is: " + model.steps_list[model.current_step].text
+            output = f"The {matches.group('ordinal')} step is: " + model.steps_list[model.current_step].text
 
     
     # what tools do i need for this recipe?
@@ -388,8 +388,8 @@ def get_chatbot_response(user_input, model):
         current_step = model.steps_list[current_step_num]
         if current_step.details.get("temp") != None:
             temp_info = current_step.details["temp"]
-            temps = [f"{temp["value"]}{temp["unit"].upper()}" for temp in temp_info]
-            output = f"The temperature should be {"/".join(temps)}"
+            temps = [f"{temp['value']}{temp['unit'].upper()}" for temp in temp_info]
+            output = f"The temperature should be {'/'.join(temps)}"
         else:
             # TODO: improve this response
             output = "The step you are are currently on does not have a temperature."
