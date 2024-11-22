@@ -289,13 +289,60 @@ def get_chatbot_response(user_input, model):
     next_step_asks = ["next step"]
     first_step_asks = ["1st step", "first step", "where do i begin", "how do i start", "tell me how to start"]
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
+    quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i need(.+)")
 
-    if any(asks in user_input for asks in first_step_asks):
+    # how much ___ do i need?
+    if re.search(quantity_regex, user_input):
+        output = ""
+        ingredient = re.search(quantity_regex, user_input).group[1]
+        for i in model.ingredient_list:
+            if ingredient in i.text:
+                output = "You will need " + i.text + "."
+        if output == "":
+            output = "I'm not sure right now. Let me know if you would like to see the ingredients list."
+    
+    # what tools do i need for this recipe?
+    if ("what tools" in user_input or "which tools" in user_input) and "recipe" in user_input:
+        output = "For this recipe, you will need:"
+        for step in model.steps_list:
+            if step.tools:
+                for t in step.tools:
+                    output += "\n" + t
+        if output == "For this recipe, you will need:":
+            output = "Sorry, I'm having trouble retrieving that information right now. Would you like to ask another question?"
+        
+    # what tools do i need for this step?
+    elif ("what tools" in user_input or "which tools" in user_input) and "this step" in user_input:
+        if not model.in_steps:
+            output = "We haven't looked at the steps yet."
+        elif model.steps_list[model.current_step].tools:
+            output = "For this step, you will need:"
+            for t in model.steps_list[model.current_step].tools:
+                output += "\n" + t
+        else:
+            output = "I don't believe you need any new tools right now. Let me know if you would like to repeat the step."
+        
+    # what ingredients do i need for this step?
+    elif ("what ingredients" in user_input or "which ingredients" in user_input) and "this step" in user_input:
+        if not model.in_steps:
+            output = "We haven't looked at the steps yet."
+        elif model.steps_list[model.current_step].ingredients:
+            output = format_ingredients_request(model.steps_list[model.current_step].ingredients)
+        else:
+            output = "I don't believe you need any new ingredients right now. Let me know if you would like me to repeat the step."
+
+    # what ingredients do i need?
+    elif (("what ingredients" in user_input or "which ingredients" in user_input) and "recipe" in user_input) \
+        or "ingredients list" in user_input:
+        output = format_ingredients_request(model.ingredient_list)
+    
+    # tell me the first step / where do i begin?
+    elif any(asks in user_input for asks in first_step_asks):
         model.in_steps = True
         model.current_step = 0
         output = "The first step is: " + model.steps_list[0].text
 
-    # tells you the next step if "next step" appears anywhere
+    # show me the next step
     elif any(asks in user_input for asks in next_step_asks):
         if not model.in_steps:
             output = "The first step is: " + model.steps_list[0].text
@@ -306,11 +353,13 @@ def get_chatbot_response(user_input, model):
             output = "The next step is: " + model.steps_list[model.current_step + 1].text
             model.current_step += 1
 
+    # show me the steps list
     elif any(asks in user_input for asks in all_step_asks):
         output = "Sure. The steps list is as follows:\n"
         for step in model.steps_list:
             output += step.text + "\n"
 
+    # how do i preheat the oven? (any question that requires external knowledge)
     elif any(inquiry in user_input for inquiry in inquiries):
         if user_input[-1] == "?":
             user_input = user_input[:-1]
@@ -326,9 +375,11 @@ def get_chatbot_response(user_input, model):
             # answer = input()
             # if answer == "yes"
 
+    # thank you!
     elif "thank" in user_input:
         output = "You're welcome! What would you like to know next?"
 
+    # anything else
     else:
         output = "I'm sorry, I don't understand. Can you rephrase your input?"
 
