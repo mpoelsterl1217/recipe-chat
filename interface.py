@@ -37,7 +37,6 @@ def grab_info(response):
         print("Sorry, something seems to be going wrong. I'm having trouble finding the steps for this recipe. Feel free to ask questions about the ingredients or restart the program with a new url.")
         steps_list = None
         
-    # print("Hello!!")
 
     for i in steps:
         # Pre-split text by semicolons before applying sent_tokenize
@@ -45,13 +44,14 @@ def grab_info(response):
         for part in semi_split:
             sentences = sent_tokenize(part.strip())  # Strip whitespace and tokenize
             for j in sentences:
-                steps_list.append(Step(num, j.strip(), ingredients_list))  # Remove extra spaces
+                steps_list.append(Step(num, j.strip(), ingredients_list))
+
                 num += 1
 
-    for i in steps_list:
-        print(i.text)
-        print(i.details)
-        print()
+    #for i in steps_list:
+       # print(i.text)
+        #print(i.details)
+        #print()
     # steps_list.pop(0)
     # steps_list = [item.strip() for item in steps_list]
     # steps_list = [item for item in steps_list if item != ""] 
@@ -321,7 +321,8 @@ def get_chatbot_response(user_input, model):
             output = f"Sorry, there are only {len(model.steps_list)} steps."
         else:
             model.current_step = step_num - 1
-            output = f"The {matches.group('ordinal')} step is: " + model.steps_list[model.current_step].text
+            model.in_steps = True
+            output = f"The {matches.group("ordinal")} step is: " + model.steps_list[model.current_step].text
 
     
     # what tools do i need for this recipe?
@@ -349,8 +350,8 @@ def get_chatbot_response(user_input, model):
     elif ("what ingredients" in user_input or "which ingredients" in user_input) and "this step" in user_input:
         if not model.in_steps:
             output = "We haven't looked at the steps yet."
-        elif model.steps_list[model.current_step].ingredients:
-            output = format_ingredients_request(model.steps_list[model.current_step].ingredients)
+        elif model.steps_list[model.current_step].details.get("ingredients"):
+            output = format_ingredients_request(model.steps_list[model.current_step].details["ingredients"])
         else:
             output = "I don't believe you need any new ingredients right now. Let me know if you would like me to repeat the step."
 
@@ -400,7 +401,7 @@ def get_chatbot_response(user_input, model):
             current_step_num = model.current_step
             current_step = model.steps_list[current_step_num]
             if current_step.details.get("time") != None:
-                output = f"{time_info}"
+                output = f"{current_step.details["time"]}"
             else:
                 output = "If you're done with the last step, you can move on to the next"
 

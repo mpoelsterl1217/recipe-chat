@@ -28,3 +28,6 @@ class Ingredient:
             return f", {self.preparations[0]} and {self.preparations[1]}"
         else:
             return ", " + ", ".join(self.preparations)
+
+    def __repr__(self):
+        return self.__str__()

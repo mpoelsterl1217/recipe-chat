@@ -22,7 +22,6 @@ units = [
 
 class Step:
     def __init__(self, snum, text, ingredients_list):
-        
         ingredients, current_uasge, tools, actions, time, temp = parse_step(text.lower(), ingredients_list)
         
         self.step_num = snum
@@ -41,19 +40,16 @@ class Step:
             self.details["temp"] = temp
         if current_uasge !=[]:
             self.details["current_uasge"] = current_uasge
-        # print(self.details)
 
     def __str__(self):
         return str(self.step_num) + self.text # + str(self.details)
 
 def parse_step(text, ingredients_list):
-    # print(ingredients_list)
 
     # nlp.add_pipe("merge_noun_chunks")
     doc = nlp(text)
 
     ingredients, actions, tools, time, temp = [], [], [], [], []
-    # print("doc", doc)
 
     # tool may not just one word
     for chunk in doc.noun_chunks:
@@ -63,13 +59,12 @@ def parse_step(text, ingredients_list):
 
     final_ingredients=[]
     for ent in doc:
-        # print(ent)
         word = ent.text.lower()
         word = lemmatizer.lemmatize(word)
-        if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)) or in_tools_list(word) :
+        if ent.pos_ in ["NOUN", "PROPN"] and ((not in_verbs_list(word)) or in_tools_list(word)) :
             for ingredient in ingredients_list:
-                for j in ingredient.ingredient_name:
-                    if (word in j) and (ingredient not in final_ingredients):
+                for j in ingredient.ingredient_name.split():
+                    if re.search(fr"\b{word}\b", j) and (ingredient not in final_ingredients):
                         final_ingredients.append(ingredient)
             
             if in_tools_list(word) or is_cooking_tool(word):
@@ -209,10 +204,10 @@ def extract_quantity_unit_pairs(sentence):
     return quantity_unit_pairs
 
 
-test = Step(1, "Arrange in a single layer on a rimmed baking sheet.",[])
+#test = Step(1, "Arrange in a single layer on a rimmed baking sheet.",[])
 
 # test = Step(1, "Bake in the preheated oven until softened and lightly browned, 15 to 20 minutes.",[])
 
-print(test.details)
-print(test.text)
-print(test.step_num)
+#print(test.details)
+#print(test.text)
+#print(test.step_num)
