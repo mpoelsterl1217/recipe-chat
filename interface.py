@@ -287,14 +287,16 @@ def get_chatbot_response(user_input, model):
     model.input_history.append(user_input)
 
     inquiries = ["how do i", "how might i", "how can i", "what can i", "what is", "how long does it take to", "what does __ mean"]
-    next_step_asks = ["next step", "what's next"]
+    next_step_asks = ["next step", "what's next", "go to the next step", "show me the next step"]
+    previous_step_asks = ["previous step", "Go back one step"]
+    current_step_asks = ["repeat please", "repeat step", "current step", "show me the current step"]
     first_step_asks = ["1st step", "first step", "where do i begin", "how do i start", "tell me how to start"]
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
     duration_asks = ["how long", "how much time"] # TODO: add more duration asks
     quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i need(.+)")
     ordinal_regex = r"(?P<ordinal>(?P<numeral>\d*)(th|st|nd|rd))"
     nth_step_regexes = [rf"take me to the {ordinal_regex} step",
-                                        rf"what's the {ordinal_regex} step"]
+                                        rf"what's the {ordinal_regex} step", rf"{ordinal_regex} step"]
 
     # n-th step requests
     matching_regex = None
@@ -322,7 +324,7 @@ def get_chatbot_response(user_input, model):
         else:
             model.current_step = step_num - 1
             model.in_steps = True
-            output = f"The {matches.group("ordinal")} step is: " + model.steps_list[model.current_step].text
+            output = f"The {matches.group('ordinal')} step is: " + model.steps_list[model.current_step].text
 
     
     # what tools do i need for this recipe?
@@ -366,6 +368,11 @@ def get_chatbot_response(user_input, model):
         model.current_step = 0
         output = "The first step is: " + model.steps_list[0].text
 
+    # tell me the current step?
+    elif any(asks in user_input for asks in current_step_asks):
+        model.in_steps = True
+        output = "The current step is: " + model.steps_list[model.current_step].text
+
     # show me the next step
     elif any(asks in user_input for asks in next_step_asks):
         if not model.in_steps:
@@ -376,6 +383,17 @@ def get_chatbot_response(user_input, model):
         else:
             output = "The next step is: " + model.steps_list[model.current_step + 1].text
             model.current_step += 1
+    
+    # show me the previous step
+    elif any(asks in user_input for asks in previous_step_asks):
+        if not model.in_steps:
+            output = "The first step is: " + model.steps_list[0].text
+            model.current_step = 0
+        elif model.current_step - 1 < 0:
+            output = "There is no previous step! You're done!"
+        else:
+            output = "The previous step is: " + model.steps_list[model.current_step - 1].text
+            model.current_step -= 1
 
     # show me the steps list
     elif any(asks in user_input for asks in all_step_asks):
@@ -401,7 +419,7 @@ def get_chatbot_response(user_input, model):
             current_step_num = model.current_step
             current_step = model.steps_list[current_step_num]
             if current_step.details.get("time") != None:
-                output = f"{current_step.details["time"]}"
+                output = f"{current_step.details['time']}"
             else:
                 output = "If you're done with the last step, you can move on to the next"
 
@@ -432,6 +450,7 @@ def get_chatbot_response(user_input, model):
 
     print()
     print(output)
+    print()
     model.output_history.append(output)
 
     return model
