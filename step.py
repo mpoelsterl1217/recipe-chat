@@ -5,11 +5,17 @@ from nltk.corpus import wordnet as wn
 from lists import in_tools_list, in_verbs_list
 from spacy.matcher import Matcher
 from parse_ingredients import parse_ingredient
+from nltk.stem import WordNetLemmatizer
 # from verbnet import VerbNet
 
 nltk.download('wordnet')
 nlp = spacy.load("en_core_web_sm")
 # vn = VerbNet()
+
+units = [
+        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove",
+        "can", "slice", "gram", "ml", "liter", "kg", "oz"
+    ]
 
 class Step:
     def __init__(self, snum, text):
@@ -45,18 +51,25 @@ def parse_step(text):
     for ent in doc:
         # print(ent)
         word = ent.text
-        if ent.pos_ in ["NOUN", "PROPN"]:
+        # if word=="mix":
+        #     print("mix  ", ent.pos_)
+        #     print(not in_verbs_list(word))
+        if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)):
+            # if word=="mix":
+            #     print("waitQ")
             if is_food(word):
                 ingredients.append(word)
             if in_tools_list(word) or is_cooking_tool(word):
                 tools.append(word)
-        if ent.pos_ in ["VERB", "ROOT"]:
+        if ent.pos_ in ["VERB", "ROOT"] or in_verbs_list(word):
             if in_verbs_list(word) or is_cooking_action(word):
                 actions.append(word)
                 # print(f"Verb: {ent.text}, Object(s): {[child.text for child in ent.children if child.dep_ == 'dobj']}")
     # print("FOOD", [ent.text for ent in doc if ent.label_ in ["PRODUCT", "FOOD"]])
     final_ingredients=[]
-    for i in clean_nouns(ingredients, doc):
+    # print(ingredients)
+    for i in set(clean_nouns(ingredients, doc)):
+        # print(i)
         final_ingredients.append(parse_ingredient(i))
     tools = list(set(clean_nouns(tools, doc)))
     actions = list(set(actions))
@@ -65,9 +78,11 @@ def parse_step(text):
     return final_ingredients, tools, actions, time, temp
 
 def is_food(word):
+    lemmatizer = WordNetLemmatizer()
+    lemma = lemmatizer.lemmatize(word)
     syns = wn.synsets(word, pos = wn.NOUN)
     for syn in syns:
-        if 'food' in syn.lexname():
+        if 'food' in syn.lexname() and (not lemma in units):
             return word
         
 def is_cooking_action(word):
@@ -114,7 +129,7 @@ def get_times(text):
 
 def extract_temperature(text):
     # Define the regex pattern
-    pattern = r"(\d+)\s*(°|degrees)?\s*(F|C|f|c|Fahrenheit|Celsius|fahrenheit|celsius)"
+    pattern = r"(\d+)\s*(°|degrees)?\s*(?<![a-zA-Z])(F|C|f|c|Fahrenheit|Celsius|fahrenheit|celsius)(?![a-zA-Z])"
     
     # Find all matches
     matches = re.findall(pattern, text)
@@ -142,8 +157,8 @@ def clean_nouns(words, doc):
             result.append(word)
     return result
 
-# test = Step(1, "Grease the bowl with butter. Place the dough back into the bowl, cover, and let rise for 30 minutes. Get ice cream from the sharp knife.")
+test = Step(1, "Mix cream of mushroom soup and diced tomatoes with green chile peppers into chicken mixture.")
 
-# print(test.details)
-# print(test.text)
-# print(test.step_num)
+print(test.details)
+print(test.text)
+print(test.step_num)
