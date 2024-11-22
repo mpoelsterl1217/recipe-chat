@@ -234,6 +234,18 @@ def get_chatbot_response(user_input, model):
             model.output_history.append(output)
         else:
             output = "I don't believe you need any new tools right now. Let me know if you would like to repeat the step."
+
+    # what methods do i need for this step?
+    elif ("what methods" in user_input or "which methods" in user_input) and "this step" in user_input:
+        if not model.in_steps:
+            output = "We haven't looked at the steps yet."
+        elif model.steps_list[model.current_step].details.get("actions"):
+            output = "For this step, you will need:"
+            for t in model.steps_list[model.current_step].details["actions"]:
+                output += "\n" + t
+            model.output_history.append(output)
+        else:
+            output = "I don't believe you need any new actions right now. Let me know if you would like to repeat the step."
         
     # what ingredients do i need for this step?
     elif ("what ingredients" in user_input or "which ingredients" in user_input) and "this step" in user_input:
