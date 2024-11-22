@@ -111,8 +111,9 @@ def parse_ingredient(line):
     # Extract quantity (numbers or fractions)
     for word, tag in tagged:
         match = re.match(r"(\d+/\d+|\d*\.\d+|\d+)", word)
-        if tag == "CD" or word.isdigit() or fraction_verify(word) or match:
-            quantity.append(word)
+        if tag == "CD":
+            if word.isdigit() or fraction_verify(word) or match:
+                quantity.append(word)
     
     # Extract measurement (including plural forms)
     for word in tokens:
@@ -187,22 +188,23 @@ def clean_nouns(words, doc):
             result.append(word)
     return result
 
-ingredients = ["1 cup salted butter softened",
-    "1 cup granulated sugar",
-    "1 cup light brown sugar packed",
-    "2 teaspoons pure vanilla extract",
-    "2 large eggs",
-    "3 cups all-purpose flour",
-    "1 teaspoon baking soda",
-    "½ teaspoon baking powder",
-    "1 teaspoon sea salt",
-    "2 cups chocolate chips (14 oz)"
-]
+# ingredients = ["1 cup salted butter softened",
+#     "1 cup granulated sugar",
+#     "1 cup light brown sugar packed",
+#     "2 teaspoons pure vanilla extract",
+#     "2 large eggs",
+#     "3 cups all-purpose flour",
+#     "1 teaspoon baking soda",
+#     "½ teaspoon baking powder",
+#     "1 teaspoon sea salt",
+#     "2 cups chocolate chips (14 oz)"
+# ]
 
-for i in ingredients:
-    final = parse_ingredient(i)
-    print(i)
-    print(final)
-    print()
+# for i in ingredients:
+#     final = parse_ingredient(i)
+#     print(i)
+#     print(final)
+#     print()
 
-# final = parse_ingredient("cooking spray")
+final = parse_ingredient("5 cups marinara sauce")
+print(final)

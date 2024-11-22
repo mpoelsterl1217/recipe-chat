@@ -4,12 +4,15 @@ import re
 from nltk.corpus import wordnet as wn
 from lists import in_tools_list, in_verbs_list
 from spacy.matcher import Matcher
-from parse_ingredients import parse_ingredient
+from parse_ingredients import parse_ingredient, fraction_verify
 from nltk.stem import WordNetLemmatizer
+from nltk import word_tokenize, pos_tag
+
 # from verbnet import VerbNet
 
 nltk.download('wordnet')
 nlp = spacy.load("en_core_web_sm")
+lemmatizer = WordNetLemmatizer()
 # vn = VerbNet()
 
 units = [
@@ -20,7 +23,7 @@ units = [
 class Step:
     def __init__(self, snum, text, ingredients_list):
         
-        ingredients, tools, actions, time, temp = parse_step(text.lower(), ingredients_list)
+        ingredients, current_uasge, tools, actions, time, temp = parse_step(text.lower(), ingredients_list)
         
         self.step_num = snum
         self.text = text
@@ -36,13 +39,15 @@ class Step:
             self.details["time"] = time
         if temp !=[]:
             self.details["temp"] = temp
+        if current_uasge !=[]:
+            self.details["current_uasge"] = current_uasge
         # print(self.details)
 
     def __str__(self):
         return str(self.snum) + self.text # + str(self.details)
 
 def parse_step(text, ingredients_list):
-    print(ingredients_list)
+    # print(ingredients_list)
 
     # nlp.add_pipe("merge_noun_chunks")
     doc = nlp(text)
@@ -56,12 +61,6 @@ def parse_step(text, ingredients_list):
         # if word=="oven":
         #     print("oven  ", ent.pos_)
         if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)) or in_tools_list(word) :
-            # if word=="oven":
-            #     print("waitQ")
-
-            # find ingredient
-            # if is_food(word):
-            #     ingredients.append(word)
             for ingredient in ingredients_list:
                 for j in ingredient.get("ingredient_name",""):
                     if (word in j) and (ingredient not in final_ingredients):
@@ -75,22 +74,14 @@ def parse_step(text, ingredients_list):
                 # print(f"Verb: {ent.text}, Object(s): {[child.text for child in ent.children if child.dep_ == 'dobj']}")
     # print("FOOD", [ent.text for ent in doc if ent.label_ in ["PRODUCT", "FOOD"]])
 
-    # final_ingredients=[]
-    
-    # for i in set(ingredients):
-    #     for ingredient in ingredients_list:
-    #         for j in ingredient.get("ingredient_name",""):
-    #             if i in j:
-    #                 final_ingredients.append(ingredient)
-
     tools = list(set(clean_nouns(tools, doc)))
     actions = list(set(actions))
     time = get_times(text.lower())
     temp = list(extract_temperature(text.lower()))
-    return final_ingredients, tools, actions, time, temp
+    current_usage = extract_quantity_unit_pairs(text)
+    return final_ingredients, current_usage, tools, actions, time, temp
 
 def is_food(word):
-    lemmatizer = WordNetLemmatizer()
     lemma = lemmatizer.lemmatize(word)
     syns = wn.synsets(word, pos = wn.NOUN)
     for syn in syns:
@@ -169,8 +160,52 @@ def clean_nouns(words, doc):
             result.append(word)
     return result
 
-test = Step(1, "Place the skillet in the preheated oven and bake until cheese is melted and slightly brown, 15 to 20 minutes.",[])
 
-# print(test.details)
-# print(test.text)
-# print(test.step_num)
+# Function to identify if a word is a number or fraction
+def is_number_or_fraction(word):
+    return bool(re.match(r"(\d+/\d+|\d*\.\d+|\d+)", word)) or fraction_verify(word)
+
+# Function to extract quantity + unit pairs from a sentence
+def extract_quantity_unit_pairs(sentence):
+    
+    # Tokenize the sentence
+    tokens = sentence.split()
+
+    quantity_unit_pairs = []
+
+    i=0
+    while i < len(tokens) - 1:
+        word = tokens[i]
+        next_word = tokens[i + 1]
+
+        # Check if the word is a number or fraction
+        if is_number_or_fraction(word):
+            # Lemmatize the next word (unit) to ensure we get the singular form
+            lemma = lemmatizer.lemmatize(next_word.lower())
+
+            while is_number_or_fraction(lemma):
+                word += " "+next_word
+                next_word = tokens[i + 2]
+                lemma = lemmatizer.lemmatize(next_word.lower())
+                i = i + 1
+
+            if lemma in units or is_food(lemma) or lemma == "more":
+                # If a valid unit follows the number, store the pair
+                quantity_unit_pairs.append({"quantity": word, "unit": next_word})
+        
+        i=i+1
+                
+            
+
+    
+    # print("Hello", quantity_unit_pairs)
+    return quantity_unit_pairs
+
+
+test = Step(1, "Top with 4 more noodles and remaining ricotta mixture.",[])
+
+# test = Step(1, "Top with remaining 4 noodles and 1 cup marinara.",[])
+
+print(test.details)
+print(test.text)
+print(test.step_num)

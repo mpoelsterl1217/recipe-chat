@@ -8,7 +8,7 @@ cooking_verbs = [
     "Plate", "Garnish", "Drizzle", "Sprinkle", "Glaze", "Toast",
     "Melt", "Set", "Reduce", "Thicken", "Zest",
     "Smoke", "Cure", "Dry", "Freeze", "Shake", "Refrigerate", "Squeeze",
-    "Heat", "Microwave", "cover"
+    "Heat", "Microwave", "cover", "top", "Spread"
 ]
 cooking_verbs = [item.lower() for item in cooking_verbs]
 
