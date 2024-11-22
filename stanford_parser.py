@@ -112,17 +112,17 @@ class IngredientParser:
 
 
 
-if __name__ == "__main__":
-    lines = ["3 large russet potatoes, peeled and cut in half lengthwise",
-            "½ cup whole milk",
-            "¼ cup butter",
-            "1 cup butter",
-            "2 cups chopped onion",
-            "2 tbsp freshly ground pepper"]
+# if __name__ == "__main__":
+#     lines = ["3 large russet potatoes, peeled and cut in half lengthwise",
+#             "½ cup whole milk",
+#             "¼ cup butter",
+#             "1 cup butter",
+#             "2 cups chopped onion",
+#             "2 tbsp freshly ground pepper"]
     
-    parser = IngredientParser()
+#     parser = IngredientParser()
 
-    for line in lines:
-        parser.parse_line(line)
+#     for line in lines:
+#         parser.parse_line(line)
 
     

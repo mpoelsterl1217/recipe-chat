@@ -80,7 +80,7 @@ def parse_step(text, ingredients_list):
     actions = list(set(actions))
     time = get_times(text.lower())
     temp = list(extract_temperature(text.lower()))
-    current_usage = extract_quantity_unit_pairs(text)
+    current_usage = extract_quantity_unit_pairs(text, final_ingredients)
     return final_ingredients, current_usage, tools, actions, time, temp
 
 def is_food(word):
@@ -167,47 +167,131 @@ def clean_nouns(words, doc):
 def is_number_or_fraction(word):
     return bool(re.match(r"(\d+/\d+|\d*\.\d+|\d+)", word)) or fraction_verify(word)
 
-# Function to extract quantity + unit pairs from a sentence
-def extract_quantity_unit_pairs(sentence):
+# # Function to extract quantity + unit pairs from a sentence
+# def extract_quantity_unit_pairs(sentence, final_ingredients):
+#     print(final_ingredients)
     
+#     # Tokenize the sentence
+#     tokens = sentence.split()
+
+#     quantity_unit_pairs = []
+
+#     i=0
+#     while i < len(tokens) - 1:
+#         word = tokens[i]
+#         next_word = tokens[i + 1]
+
+#         # Check if the word is a number or fraction
+#         if is_number_or_fraction(word):
+#             # Lemmatize the next word (unit) to ensure we get the singular form
+#             lemma = lemmatizer.lemmatize(next_word.lower())
+
+#             while is_number_or_fraction(lemma):
+#                 word += " "+next_word
+#                 next_word = tokens[i + 2]
+#                 lemma = lemmatizer.lemmatize(next_word.lower())
+#                 i = i + 1
+
+#             if lemma in units or is_food(lemma) or lemma == "more":
+#                 # If a valid unit follows the number, store the pair
+#                 i = i+1
+
+#                 # try to find corresponding ingredients name
+#                 count=i + 1
+#                 while count < len(tokens) - 1:
+#                     current = lemmatizer.lemmatize(tokens[count])
+#                     # current = tokens[count]
+#                     current = re.sub(r"[,\.!@#$%^&*()\-+=:;\"'<>?/\\\[\]{}|`~]", "", current)
+#                     print("Hello ", current)
+#                     # no corresponding ingredients name
+#                     if (current == "oil"):
+#                         print(current in units)
+#                     if current in units:
+#                         quantity_unit_pairs.append({"quantity": word, "unit": next_word, "ingredient_name": ""})
+#                         break
+                    
+#                     for ingredient in final_ingredients:
+#                         print("What !", ingredient.ingredient_name)
+#                         if current in ingredient.ingredient_name:
+#                             quantity_unit_pairs.append({"quantity": word, "unit": next_word, "ingredient_name": ingredient.ingredient_name})
+#                             break
+#                     count +=1
+#                 continue
+                
+#         i=i+1
+                
+#     return quantity_unit_pairs
+
+
+def extract_quantity_unit_pairs(sentence, final_ingredients):
+    print(final_ingredients)
+
     # Tokenize the sentence
     tokens = sentence.split()
-
     quantity_unit_pairs = []
+    i = 0
 
-    i=0
     while i < len(tokens) - 1:
         word = tokens[i]
         next_word = tokens[i + 1]
 
-        # Check if the word is a number or fraction
+        # Check if the current word is a number or fraction
         if is_number_or_fraction(word):
-            # Lemmatize the next word (unit) to ensure we get the singular form
+            # Lemmatize the next word (unit) to ensure it's in singular form
             lemma = lemmatizer.lemmatize(next_word.lower())
 
+            # Handle cases where multiple numbers or fractions are grouped together
             while is_number_or_fraction(lemma):
-                word += " "+next_word
-                next_word = tokens[i + 2]
-                lemma = lemmatizer.lemmatize(next_word.lower())
-                i = i + 1
+                word += " " + next_word  # Combine with the next word
+                i += 1
+                if i + 1 < len(tokens):
+                    next_word = tokens[i + 1]
+                    lemma = lemmatizer.lemmatize(next_word.lower())
+                else:
+                    break
 
+            # Check if the lemmatized word is a valid unit or food
             if lemma in units or is_food(lemma) or lemma == "more":
-                # If a valid unit follows the number, store the pair
-                quantity_unit_pairs.append({"quantity": word, "unit": next_word})
-        
-        i=i+1
-                
-            
+                # Move past the quantity and unit
+                i += 1
+                ingredient_name = ""
+                count = i + 1
 
+                # Try to find a corresponding ingredient name
+                while count < len(tokens):
+                    current = lemmatizer.lemmatize(tokens[count].lower())
+                    # Remove special characters from the current token
+                    current = re.sub(r"[,\.!@#$%^&*()\-+=:;\"'<>?/\\\[\]{}|`~]", "", current)
+                    
+                    # Check if the current token is in the units (invalid ingredient name)
+                    if current in units:
+                        break
+                    
+                    # Match the current token against ingredients
+                    for ingredient in final_ingredients:
+                        if current in ingredient.ingredient_name:
+                            ingredient_name = ingredient.ingredient_name
+                            break
+
+                    if ingredient_name:  # Stop if an ingredient name is found
+                        break
+
+                    count += 1
+
+                # Append the extracted pair
+                quantity_unit_pairs.append({
+                    "quantity": word,
+                    "unit": next_word,
+                    "ingredient_name": ingredient_name
+                })
+
+        i += 1  # Move to the next token
     
-    # print("Hello", quantity_unit_pairs)
     return quantity_unit_pairs
-
-
 #test = Step(1, "Arrange in a single layer on a rimmed baking sheet.",[])
 
-# test = Step(1, "Bake in the preheated oven until softened and lightly browned, 15 to 20 minutes.",[])
+test = Step(1, "Toss together butternut squash, 2 teaspoons of the oil, 1/2 teaspoon of the salt, and 1/4 teaspoon of the pepper.",[])
 
-#print(test.details)
-#print(test.text)
-#print(test.step_num)
+print(test.details)
+print(test.text)
+print(test.step_num)

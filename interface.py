@@ -293,10 +293,11 @@ def get_chatbot_response(user_input, model):
     first_step_asks = ["1st step", "first step", "where do i begin", "how do i start", "tell me how to start"]
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
     duration_asks = ["how long", "how much time"] # TODO: add more duration asks
-    quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i need(.+)")
+    quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i|I need(.+)")
     ordinal_regex = r"(?P<ordinal>(?P<numeral>\d*)(th|st|nd|rd))"
     nth_step_regexes = [rf"take me to the {ordinal_regex} step",
                                         rf"what's the {ordinal_regex} step", rf"{ordinal_regex} step"]
+    
 
     # n-th step requests
     matching_regex = None
@@ -309,10 +310,21 @@ def get_chatbot_response(user_input, model):
     # how much ___ do i need?
     if re.search(quantity_regex, user_input):
         output = ""
-        ingredient = re.search(quantity_regex, user_input).group[1]
-        for i in model.ingredient_list:
-            if ingredient in i.text:
-                output = "You will need " + i.text + "."
+        # print("Hello")
+        # print(re.search(quantity_regex, user_input).group(2))
+        ingredient = re.search(quantity_regex, user_input).group(2)
+        count=0
+        # print(model.steps_list[model.current_step].details)
+        for i in model.steps_list[model.current_step].details.get("ingredients"):
+            # print(i)
+            if ingredient in i.ingredient_name:
+                current_usage_list=model.steps_list[model.current_step].details.get("current_uasge")
+                for current_usage in current_usage_list:
+                    if ingredient in current_usage.get("ingredient_name"):
+                        output = "You will need " + current_usage.get("quantity") + " " + current_usage.get("unit") + "."
+                        break
+            count+=1
+        
         if output == "":
             output = "I'm not sure right now. Let me know if you would like to see the ingredients list."
 
