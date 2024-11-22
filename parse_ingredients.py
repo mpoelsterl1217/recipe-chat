@@ -74,11 +74,28 @@ def parse_ingredient(line):
     
     # Define common units and preparation terms
     units = [
-        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove",
-        "can", "slice", "gram", "ml", "liter", "kg", "oz"
+        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove", "can",
+        "slice", "gram", "g", "kg", "milligram", "mg", "milliliter", "ml", "liter", "l",
+        "oz", "fluid ounce", "fl oz", "quart", "qt", "pint", "pt", "gallon", "gal",
+        "stick", "dash", "drop", "handful", "package", "bag", "packet", "bar", "bottle",
+        "head", "stalk", "bunch", "sheet", "piece", "sprig", "strip", "cube"
     ]
-    preparation_terms = ["dice", "mince", "chop", "shred", "grate", "slice", "cut", "soften"]
-    descriptors_terms = ["freshly", "ripe", "salted", "extra-virgin"]
+    
+    preparation_terms = [
+        "dice", "mince", "chop", "shred", "grate", "slice", "cut", "soften",
+        "julienne", "peel", "crush", "roast", "bake", "steam", "fry", "boil", 
+        "sauté", "stir-fry", "broil", "caramelize", "poach", "grill", "braise",
+        "blanch", "whisk", "whip", "knead", "fold", "sear", "toast", "marinate",
+        "blend", "purée", "press", "zest", "scald", "deglaze"
+    ]
+
+    descriptors_terms = [
+        "freshly", "ripe", "salted", "extra-virgin", "smoked", "spicy", "sweet",
+        "savory", "organic", "ripe", "roasted", "unsalted", "creamy", "aged",
+        "mature", "light", "dark", "fermented", "powdered", "ground", "dried",
+        "pickled", "raw", "whole", "chilled", "frozen", "canned", "boiled",
+        "toasted", "browned", "grated", "sifted", "softened", "dehydrated"
+    ]
 
     preparations = []
     descriptors = []
