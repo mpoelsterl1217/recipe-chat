@@ -82,7 +82,8 @@ descriptors_terms = [
     "savory", "organic", "ripe", "roasted", "unsalted", "creamy", "aged",
     "mature", "light", "dark", "fermented", "powdered", "ground", "dried",
     "pickled", "raw", "whole", "chilled", "frozen", "canned", "boiled",
-    "toasted", "browned", "grated", "sifted", "softened", "dehydrated", "boneless"
+    "toasted", "browned", "grated", "sifted", "softened", "dehydrated", "boneless", "cooking", "fresh",
+    "oven-ready"
 ]
 
 def fraction_verify(word):
@@ -137,8 +138,17 @@ def parse_ingredient(line):
         if (word not in exclude) and (not re.match(r'[^\w\s]', word)) and is_food(word):
             name.append(word)
     
-    print(name)
-    ingredient_name = list(set(clean_nouns(name, doc)))
+    # print(name)
+    if not name:
+        ingredient_name=[]
+        for word in tokens:
+            if (word not in exclude) and (not re.match(r'[^\w\s]', word)):
+                ingredient_name.append(word)
+    else:
+        for i in list(set(clean_nouns(name, doc))):
+            for j in exclude:
+                i =i.replace(j, "")
+            ingredient_name.append(i)
 
     
     return {
@@ -177,23 +187,23 @@ def clean_nouns(words, doc):
             result.append(word)
     return result
 
-# ingredients = ["1 cup salted butter softened",
-#     "1 cup granulated sugar",
-#     "1 cup light brown sugar packed",
-#     "2 teaspoons pure vanilla extract",
-#     "2 large eggs",
-#     "3 cups all-purpose flour",
-#     "1 teaspoon baking soda",
-#     "½ teaspoon baking powder",
-#     "1 teaspoon sea salt",
-#     "2 cups chocolate chips (14 oz)"
-# ]
+ingredients = ["1 cup salted butter softened",
+    "1 cup granulated sugar",
+    "1 cup light brown sugar packed",
+    "2 teaspoons pure vanilla extract",
+    "2 large eggs",
+    "3 cups all-purpose flour",
+    "1 teaspoon baking soda",
+    "½ teaspoon baking powder",
+    "1 teaspoon sea salt",
+    "2 cups chocolate chips (14 oz)"
+]
 
-# for i in ingredients:
-#     final = parse_ingredient(i)
-#     print(i)
-#     print(final)
-#     print()
+for i in ingredients:
+    final = parse_ingredient(i)
+    print(i)
+    print(final)
+    print()
 
-final = parse_ingredient("2 cloves garlic, minced")
-print(final)
+# final = parse_ingredient("cooking spray")
+# print(final)

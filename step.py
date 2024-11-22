@@ -42,22 +42,31 @@ class Step:
         return str(self.snum) + self.text # + str(self.details)
 
 def parse_step(text, ingredients_list):
+    print(ingredients_list)
 
     # nlp.add_pipe("merge_noun_chunks")
     doc = nlp(text)
 
     ingredients, actions, tools, time, temp = [], [], [], [], []
     # print("doc", doc)
+    final_ingredients=[]
     for ent in doc:
         # print(ent)
-        word = ent.text
+        word = ent.text.lower()
         # if word=="oven":
         #     print("oven  ", ent.pos_)
         if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)) or in_tools_list(word) :
             # if word=="oven":
             #     print("waitQ")
-            if is_food(word):
-                ingredients.append(word)
+
+            # find ingredient
+            # if is_food(word):
+            #     ingredients.append(word)
+            for ingredient in ingredients_list:
+                for j in ingredient.get("ingredient_name",""):
+                    if (word in j) and (ingredient not in final_ingredients):
+                        final_ingredients.append(ingredient)
+            
             if in_tools_list(word) or is_cooking_tool(word):
                 tools.append(word)
         if ent.pos_ in ["VERB", "ROOT"] or in_verbs_list(word):
@@ -66,13 +75,13 @@ def parse_step(text, ingredients_list):
                 # print(f"Verb: {ent.text}, Object(s): {[child.text for child in ent.children if child.dep_ == 'dobj']}")
     # print("FOOD", [ent.text for ent in doc if ent.label_ in ["PRODUCT", "FOOD"]])
 
-    final_ingredients=[]
+    # final_ingredients=[]
     
-    for i in set(ingredients):
-        for ingredient in ingredients_list:
-            for j in ingredient.get("ingredient_name",""):
-                if i in j:
-                    final_ingredients.append(ingredient)
+    # for i in set(ingredients):
+    #     for ingredient in ingredients_list:
+    #         for j in ingredient.get("ingredient_name",""):
+    #             if i in j:
+    #                 final_ingredients.append(ingredient)
 
     tools = list(set(clean_nouns(tools, doc)))
     actions = list(set(actions))
