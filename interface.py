@@ -292,6 +292,17 @@ def get_chatbot_response(user_input, model):
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
     duration_asks = ["how long", "how much time"] # TODO: add more duration asks
     quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i need(.+)")
+    ordinal_regex = r"(?P<ordinal>(?P<numeral>\d*)(th|st|nd|rd))"
+    nth_step_regexes = [rf"take me to the {ordinal_regex} step",
+                                        rf"what's the {ordinal_regex} step"]
+
+    # n-th step requests
+    matching_regex = None
+    for nth_step_regex in nth_step_regexes:
+        if re.search(nth_step_regex, user_input):
+            matching_regex = nth_step_regex
+            break
+
 
     # how much ___ do i need?
     if re.search(quantity_regex, user_input):
@@ -302,9 +313,19 @@ def get_chatbot_response(user_input, model):
                 output = "You will need " + i.text + "."
         if output == "":
             output = "I'm not sure right now. Let me know if you would like to see the ingredients list."
+
+    elif matching_regex:
+        matches = re.search(matching_regex, user_input)
+        step_num = int(matches.group("numeral"))
+        if step_num > len(model.steps_list) or step_num < 1:
+            output = f"Sorry, there are only {len(model.steps_list)} steps."
+        else:
+            model.current_step = step_num - 1
+            output = f"The {matches.group("ordinal")} step is: " + model.steps_list[model.current_step].text
+
     
     # what tools do i need for this recipe?
-    if ("what tools" in user_input or "which tools" in user_input) and "recipe" in user_input:
+    elif ("what tools" in user_input or "which tools" in user_input) and "recipe" in user_input:
         output = "For this recipe, you will need:"
         for step in model.steps_list:
             if step.tools:
