@@ -105,7 +105,7 @@ def parse_ingredient(line):
 
 
     try: 
-        ingredient = ingredient_parser.parse_line(line)
+        ingredient = ingredient_parser.parse_ingredient_line(line)
     except Exception as e: 
         print(f"stanford parser failed: {line}")
         print(e)

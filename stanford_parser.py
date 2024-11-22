@@ -24,7 +24,7 @@ class IngredientParser:
     def __del__(self):
         self.server.stop()
 
-    def parse_line(self, line):
+    def parse_ingredient_line(self, line):
         parts = line.split(",")
 
         if len(parts) > 2:
