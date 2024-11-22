@@ -329,8 +329,8 @@ def get_chatbot_response(user_input, model):
     elif ("what tools" in user_input or "which tools" in user_input) and "recipe" in user_input:
         output = "For this recipe, you will need:"
         for step in model.steps_list:
-            if step.tools:
-                for t in step.tools:
+            if step.details.get("tools"):
+                for t in step.details["tools"]:
                     output += "\n" + t
         if output == "For this recipe, you will need:":
             output = "Sorry, I'm having trouble retrieving that information right now. Would you like to ask another question?"
@@ -339,9 +339,9 @@ def get_chatbot_response(user_input, model):
     elif ("what tools" in user_input or "which tools" in user_input) and "this step" in user_input:
         if not model.in_steps:
             output = "We haven't looked at the steps yet."
-        elif model.steps_list[model.current_step].tools:
+        elif model.steps_list[model.current_step].details.get("tools"):
             output = "For this step, you will need:"
-            for t in model.steps_list[model.current_step].tools:
+            for t in model.steps_list[model.current_step].details["tools"]:
                 output += "\n" + t
         else:
             output = "I don't believe you need any new tools right now. Let me know if you would like to repeat the step."
