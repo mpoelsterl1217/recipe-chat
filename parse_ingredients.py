@@ -117,14 +117,14 @@ def parse_ingredient(line):
             quantity.append(word)
     
     # Extract measurement (including plural forms)
-    for word in tokens:
-        lemma = lemmatizer.lemmatize(word)  # Normalize the token to singular form
+    for word, tag in tagged:
+        lemma = lemmatizer.lemmatize(word, pos='n')  # Normalize the token to singular form
         if lemma in units:
             measurement.append(word)
     
     # Extract preparation details (terms like softened)
-    for word in tokens:
-        lemma = lemmatizer.lemmatize(word)
+    for word, tag in tagged:
+        lemma = lemmatizer.lemmatize(word, pos='v')
         if lemma in preparation_terms:
             preparations.append(word)
     
