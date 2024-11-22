@@ -1,4 +1,4 @@
-from ingredient import Ingredient
+
 # import re
 
 # pattern = r"""
@@ -57,10 +57,14 @@ from nltk import pos_tag
 import unicodedata
 from nltk.corpus import wordnet as wn
 import spacy
+from stanford_parser import IngredientParser
+from ingredient import Ingredient
 
 nlp = spacy.load("en_core_web_sm")
 
 lemmatizer = WordNetLemmatizer()
+
+ingredient_parser = IngredientParser()
 
 units = [
         "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove", "can",
@@ -99,59 +103,71 @@ def fraction_verify(word):
 def parse_ingredient(line):
     # Tokenize and tag the input line
 
-    line = line.lower()
-    doc = nlp(line)
-    tokens = word_tokenize(line)
-    tagged = pos_tag(tokens)
 
-    preparations = []
-    descriptors = []
-    ingredient_name = []
-    quantity = []
-    measurement = []
-    # Extract quantity (numbers or fractions)
-    for word, tag in tagged:
-        match = re.match(r"(\d+/\d+)|(\d*\.\d+)|(\d+)|[\u00BC-\u00BE\u2150-\u215E]", word)
-        #if tag == "CD":
-        if word.isdigit() or fraction_verify(word) or match:
-            quantity.append(word)
+    try: 
+        ingredient = ingredient_parser.parse_line(line)
+    except: 
+        print(f"stanford parser failed: {line}")
     
-    # Extract measurement (including plural forms)
-    for word, tag in tagged:
-        lemma = lemmatizer.lemmatize(word, pos='n')  # Normalize the token to singular form
-        if lemma in units:
-            measurement.append(word)
-    
-    # Extract preparation details (terms like softened)
-    for word, tag in tagged:
-        lemma = lemmatizer.lemmatize(word, pos='v')
-        if lemma in preparation_terms:
-            preparations.append(word)
-    
-    # Extract descriptors (adjectives or specific terms like "salted")
-    for word, tag in tagged:
-        if (tag == "JJ" and word.lower() in descriptors_terms) and not fraction_verify(word):
-            descriptors.append(word)
-    
-    # Exclude found tokens to isolate the ingredient name
-    name = []
-    exclude = set(quantity + measurement + preparations + descriptors)
-    for word in tokens:
-        if (word not in exclude) and (not re.match(r'[^\w\s]', word)) and is_food(word):
-            name.append(word)
-    
-    # print(name)
-    if not name:
-        ingredient_name=[]
+        line = line.lower()
+        doc = nlp(line)
+        tokens = word_tokenize(line)
+        tagged = pos_tag(tokens)
+
+        preparations = []
+        descriptors = []
+        ingredient_name = []
+        quantity = []
+        measurement = []
+
+        # Extract quantity (numbers or fractions)
+        for word, tag in tagged:
+            match = re.match(r"(\d+/\d+)|(\d*\.\d+)|(\d+)|[\u00BC-\u00BE\u2150-\u215E]", word)
+            #if tag == "CD":
+            if word.isdigit() or fraction_verify(word) or match:
+                quantity.append(word)
+        
+        # Extract measurement (including plural forms)
+        for word, tag in tagged:
+            lemma = lemmatizer.lemmatize(word, pos='n')  # Normalize the token to singular form
+            if lemma in units:
+                measurement.append(word)
+        
+        # Extract preparation details (terms like softened)
+        for word, tag in tagged:
+            lemma = lemmatizer.lemmatize(word, pos='v')
+            if lemma in preparation_terms:
+                preparations.append(word)
+        
+        # Extract descriptors (adjectives or specific terms like "salted")
+        for word, tag in tagged:
+            if (tag == "JJ" and word.lower() in descriptors_terms) and not fraction_verify(word):
+                descriptors.append(word)
+        
+        # Exclude found tokens to isolate the ingredient name
+        name = []
+        exclude = set(quantity + measurement + preparations + descriptors)
         for word in tokens:
-            if (word not in exclude) and (not re.match(r'[^\w\s]', word)):
-                ingredient_name.append(word)
-    else:
-        for i in list(set(clean_nouns(name, doc))):
-            for j in exclude:
-                i =i.replace(j, "")
-            ingredient_name.append(i)
+            if (word not in exclude) and (not re.match(r'[^\w\s]', word)) and is_food(word):
+                name.append(word)
+        
+        # print(name)
+        if not name:
+            ingredient_name=[]
+            for word in tokens:
+                if (word not in exclude) and (not re.match(r'[^\w\s]', word)):
+                    ingredient_name.append(word)
+        else:
+            for i in list(set(clean_nouns(name, doc))):
+                for j in exclude:
+                    i =i.replace(j, "")
+                ingredient_name.append(i)
 
+        ingredient = Ingredient(" ".join(quantity).strip(),
+                                " ".join(measurement).strip(),
+                                descriptors,
+                                " ".join(ingredient_name).strip(),
+                                preparations)
     
     #return {
     #    "quantity": quantity if quantity else None,
@@ -160,11 +176,7 @@ def parse_ingredient(line):
     #    "ingredient_name": ingredient_name if ingredient_name else None,
     #    "preparation": preparations if preparations else None
     #}
-    return Ingredient(" ".join(quantity).strip(),
-        " ".join(measurement).strip(),
-        descriptors,
-        " ".join(ingredient_name).strip(),
-        preparations)
+    return ingredient
 
 def parse_ingredients(ingredients):
     result = []
