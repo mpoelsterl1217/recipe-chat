@@ -106,8 +106,9 @@ def parse_ingredient(line):
 
     try: 
         ingredient = ingredient_parser.parse_line(line)
-    except: 
+    except Exception as e: 
         print(f"stanford parser failed: {line}")
+        print(e)
     
         line = line.lower()
         doc = nlp(line)
