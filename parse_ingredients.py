@@ -160,11 +160,11 @@ def parse_ingredient(line):
     #    "ingredient_name": ingredient_name if ingredient_name else None,
     #    "preparation": preparations if preparations else None
     #}
-    return Ingredient(" ".join(quantity).strip() if quantity else None,
-        " ".join(measurement).strip() if measurement else None,
-        " ".join(descriptors).strip() if descriptors else None,
-        " ".join(ingredient_name).strip() if ingredient_name else None,
-        " ".join(preparations).strip() if preparations else None)
+    return Ingredient(" ".join(quantity).strip(),
+        " ".join(measurement).strip(),
+        descriptors,
+        " ".join(ingredient_name).strip(),
+        preparations)
 
 def parse_ingredients(ingredients):
     result = []
