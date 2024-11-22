@@ -1,97 +1,53 @@
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk import pos_tag
+from nltk.corpus import wordnet as wn
+from nltk.stem import WordNetLemmatizer
 
-def extract_ingredient_details_nltk(line):
-    # Tokenize and tag the input line
-    tokens = word_tokenize(line)
-    tagged = pos_tag(tokens)
+# Initialize the lemmatizer
+lemmatizer = WordNetLemmatizer()
+
+# Assuming 'units' is a predefined list of unit words
+units = ["cup", "tsp", "liter", "ml", "gram"]
+
+# Helper function to check if a word is related to food
+def is_food(word):
+    lemma = lemmatizer.lemmatize(word.lower())
+    synsets = wn.synsets(lemma, pos=wn.NOUN)
     
-    # Define common units and preparation terms
-    units = [
-        "cup", "teaspoon", "tablespoon", "pinch", "pound", "ounce", "clove",
-        "can", "slice", "gram", "ml", "liter", "kg"
-    ]
-    preparation_terms = ["diced", "minced", "chopped", "shredded", "grated", "sliced", "cut", "softened"]
+    # Iterate through synsets and filter by 'food' or related categories
+    for syn in synsets:
+        lexname = syn.lexname().lower()
+        if 'food' in lexname or 'dairy_product' in lexname:
+            return True
+    return False
+
+# Function to find possible substitutions (synonyms and hypernyms)
+def find_substitutions(word):
+    lemma = lemmatizer.lemmatize(word.lower())
+    synsets = wn.synsets(lemma, pos=wn.NOUN)
     
-    # Extract quantity (numbers or fractions)
-    quantity = next((word for word, tag in tagged if tag == "CD" or word.isdigit() or "½" in word), None)
-    
-    # Extract measurement (including plural forms)
-    measurement = next((word for word in tokens if word.lower().rstrip('s') in units), None)
-    
-    # Extract preparation details (terms like softened)
-    preparation = next((word for word in tokens if word.lower() in preparation_terms), None)
-    
-    # Extract descriptors (adjectives or specific terms like "salted")
-    descriptors = [word for word, tag in tagged if tag == "JJ" or word.lower() in ["freshly", "ripe", "salted", "extra-virgin"]]
-    
-    # Exclude found tokens to isolate the ingredient name
-    exclude = [quantity, measurement, preparation] + descriptors
-    ingredient_name = " ".join([word for word in tokens if word not in exclude]).strip(", ")
-    
-    # In case there are multiple components in the name (like "Salted Butter"), we should keep the first word as descriptor
-    if ingredient_name.lower() == "butter" and descriptors:
-        ingredient_name = "Butter"
-    
-    return {
-        "quantity": quantity,
-        "measurement": measurement if measurement else None,
-        "descriptor": ", ".join(descriptors) if descriptors else None,
-        "ingredient_name": ingredient_name.title(),
-        "preparation": preparation
-    }
+    substitutions = set()
 
-# Test cases
-ingredient_lines = [
-    "1 cup salted butter softened",
-    "1 cup granulated sugar",
-    "1 cup light brown sugar packed",
-    "2 teaspoons pure vanilla extract",
-    "2 large eggs",
-    "3 cups all-purpose flour",
-    "1 teaspoon baking soda",
-    "½ teaspoon baking powder",
-    "1 teaspoon sea salt",
-    "2 cups chocolate chips (14 oz)"
-]
+    # Iterate through synsets to find synonyms or related words
+    for syn in synsets:
+        lexname = syn.lexname().lower()
+        
+        # Add synonyms (lemmas) from the synset
+        for lemma in syn.lemmas():
+            if 'food' in lexname or 'dairy_product' in lexname:
+                substitutions.add(lemma.name())
 
-# Extracting details for each ingredient line
-parsed_ingredients = [extract_ingredient_details_nltk(line) for line in ingredient_lines]
+        # Add hypernyms (broader categories) related to food or ingredients
+        for hypernym in syn.hypernyms():
+            for lemma in hypernym.lemmas():
+                if 'food' in hypernym.lexname().lower() or 'dairy_product' in hypernym.lexname().lower():
+                    substitutions.add(lemma.name())
 
-# Display results
-for i in parsed_ingredients:
-    print(i)
+    # Return unique substitutions (excluding the original word)
+    return [sub for sub in substitutions if sub != word]
 
-# import nltk
-# import spacy
-# from nltk.corpus import wordnet as wn
-# from lists import in_tools_list, in_verbs_list
-# from spacy.matcher import Matcher
-# # from verbnet import VerbNet
-# import re
-
-# nltk.download('wordnet')
-# nlp = spacy.load("en_core_web_sm")
-
-
-# def extract_temperature(text):
-#     # Define the regex pattern
-#     pattern = r"(\d+)\s*(°|degrees)?\s*(F|C|f|c|Fahrenheit|Celsius|fahrenheit|celsius)"
-    
-#     # Find all matches
-#     matches = re.findall(pattern, text)
-    
-#     # Process matches into a list of dictionaries
-#     temperatures = []
-#     for match in matches:
-#         value = int(match[0])  # The numeric part
-#         unit = match[2].lower()  # The unit part
-#         temperatures.append({"value": value, "unit": unit})
-    
-#     return temperatures
-
-# print(extract_temperature("35 degrees f"))
-
-
-
+# Example usage
+ingredient = "butter"
+if is_food(ingredient):
+    substitutes = find_substitutions(ingredient)
+    print(f"Possible substitutions for {ingredient}: {', '.join(substitutes)}")
+else:
+    print(f"{ingredient} is not identified as food.")

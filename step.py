@@ -224,7 +224,7 @@ def is_number_or_fraction(word):
 
 
 def extract_quantity_unit_pairs(sentence, final_ingredients):
-    print(final_ingredients)
+    # print(final_ingredients)
 
     # Tokenize the sentence
     tokens = sentence.split()
@@ -290,8 +290,8 @@ def extract_quantity_unit_pairs(sentence, final_ingredients):
     return quantity_unit_pairs
 #test = Step(1, "Arrange in a single layer on a rimmed baking sheet.",[])
 
-test = Step(1, "Toss together butternut squash, 2 teaspoons of the oil, 1/2 teaspoon of the salt, and 1/4 teaspoon of the pepper.",[])
+# test = Step(1, "Toss together butternut squash, 2 teaspoons of the oil, 1/2 teaspoon of the salt, and 1/4 teaspoon of the pepper.",[])
 
-print(test.details)
-print(test.text)
-print(test.step_num)
+# print(test.details)
+# print(test.text)
+# print(test.step_num)

@@ -107,8 +107,8 @@ def parse_ingredient(line):
     try: 
         ingredient = ingredient_parser.parse_ingredient_line(line)
     except Exception as e: 
-        print(f"stanford parser failed: {line}")
-        print(e)
+        # print(f"stanford parser failed: {line}")
+        # print(e)
     
         line = line.lower()
         doc = nlp(line)
@@ -225,5 +225,5 @@ def clean_nouns(words, doc):
 #     print(final)
 #     print()
 
-final = parse_ingredient("5 cups marinara sauce")
-print(final)
+# final = parse_ingredient("5 cups marinara sauce")
+# print(final)

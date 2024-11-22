@@ -96,141 +96,6 @@ def format_ingredients_request(ingredients):
     response += "\nWhat else would you like to know?"
     return response
 
-def main1():
-    # input_history = []
-    # respond_history = []
-    # current_step = 0
-    # # current_ingredient = 0
-    # print("Please provide a valid AllRecipes.com URL or type 'q' to quit the program")
-    # url = input()
-    # if url.lower()=='q':
-    #     print("Bye!")
-    #     return
-    # continue_or_quit = confirm_url(url)
-    # if continue_or_quit:
-    #     response = requests.get(url)
-    #     ingredients_list, steps_list = grab_info(response)
-    #     # 
-    #     print("Alright. Let's start working with your recipe. What do you want to do?")
-    #     print("[1] Go over ingredients list ")
-    #     print("[2] Go over recipe steps ")
-    #     print("[3] Ask a question about the recipe")
-
-    #     while True:
-    #         num=input()
-    #         if num=='1':
-    #             print(format_ingredients_request(ingredients_list))
-    #             input_history.append("1")
-    #             respond_history.append(format_ingredients_request(ingredients_list))
-    #             break
-    #         elif num=='2':
-    #             print(steps_list[0])
-    #             input_history.append("2")
-    #             respond_history.append(steps_list[0])
-    #             current_step = 0
-    #             break
-    #         elif num=="3":
-    #             break
-    #         else:
-    #             print("I don't understand your response. Try again?")
-        
-        # TODO: understand what user input and response with what we get from websites
-        while True:
-            user_input = input().lower()
-            print("current input:", user_input)
-            input_history.append(user_input)
-            # 1 example
-            # if "show me the ingredients list" in user_input:
-            #     print(ingredients_list)
-            #     print()
-            #     respond_history.append(ingredients_list)
-            #     continue
-        
-            # if "show me the step" in user_input or "show me the recipe steps" in user_input:
-            #     print(steps_list)
-            #     print()
-            #     respond_history.append(steps_list)
-
-            # 2 exmaple
-            num = extract_numbers_nltk(user_input)
-            if num and len(num)==1 and not "how" in user_input and not "what" in user_input:
-                if "repeat" in num:
-                    print(steps_list[current_step])
-                    print()
-                    continue
-                if "step" in user_input:
-                    if "previous" in num:
-                        if current_step-1 < 0:
-                            print("no previous step")
-                            print()
-                            continue
-                        else:
-                            current_step -=1
-                            print(steps_list[current_step])
-                            print()
-                    # elif "next" in num:
-                    #     if current_step + 1 >= len(steps_list):
-                    #         print("no next step")
-                    #         print()
-                    #         continue
-                    #     else:
-                    #         current_step +=1
-                    #         print(steps_list[current_step])
-                    #         print()
-                    elif "repeat" in num or "current" in num:
-                        print(steps_list[current_step])
-                        print()
-                    else:
-                        if extract_number_re(num[-1]) - 1 < 0 or extract_number_re(num[-1]) - 1 >= len(steps_list):
-                            print("no such step")
-                            print()
-                            continue
-                        else:
-                            current_step = extract_number_re(num[-1]) - 1
-                            print(steps_list[current_step])
-                            print()
-                    
-                    respond_history.append(steps_list[current_step])
-                    
-                    continue
-            
-            # 3 exmple
-
-
-
-    #         # 4 & 5 & 6. Simple "what is" questions. Specific "how to" questions
-    #         inquiries = ["how do i", "how might i", "how can i", "what can i", "what is", "how long does it take to", "what does __ mean"]
-    #         if any(inquiries in user_input):
-    #             # print("4,5,6")
-
-    #         # 6 use conversation history to infer what “that” refers to. may use SpaCy to deal with it.
-    #             if "how to" in user_input and ("that" in user_input or "this" in user_input or "these" in user_input or "those" in user_input):
-    #                 reference_url = respond_history[-1]
-    #                 reference_url="+".join(reference_url.split(" "))
-    #                 # should we get the first article that comes up or just search on google directly??
-    #                 print("I found a reference for you: " + find_article(user_input))
-    #                 # print("Would you like me to find a video or another reference?")
-    #                 # answer = input()
-    #                 # if answer == "yes"
-    #                 # 
-    #                 print()
-    #                 continue
-            
-    #             reference_url="+".join(user_input.split(" "))
-    #             print("I found a reference for you: " + find_article(user_input))
-    #             continue
-            
-    #         # invaild input
-    #         print("I'm sorry, I don't understand. Can you rephrase your input?")
-
-    #         continue
-        
-
-    # else:
-    #     print("URL does not exist on Internet." )
-    #     main()
-
-
 def get_init_info():
     
     print("Please provide a valid AllRecipes.com URL or type 'q' at any time to quit the program.")
@@ -286,7 +151,7 @@ def get_chatbot_response(user_input, model):
 
     model.input_history.append(user_input)
 
-    inquiries = ["how do i", "how might i", "how can i", "what can i", "what is", "how long does it take to", "what does __ mean"]
+    inquiries = ["how do i", "how might i", "how can i", "what can i", "what is", "what does __ mean", "what is", "how to"]
     next_step_asks = ["next step", "what's next", "go to the next step", "show me the next step"]
     previous_step_asks = ["previous step", "Go back one step"]
     current_step_asks = ["repeat please", "repeat step", "current step", "show me the current step"]
@@ -294,6 +159,7 @@ def get_chatbot_response(user_input, model):
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
     duration_asks = ["how long", "how much time"] # TODO: add more duration asks
     quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i|I need(.+)")
+    descriptor_regex = re.compile("What is the description of (.+)")
     ordinal_regex = r"(?P<ordinal>(?P<numeral>\d*)(th|st|nd|rd))"
     nth_step_regexes = [rf"take me to the {ordinal_regex} step",
                                         rf"what's the {ordinal_regex} step", rf"{ordinal_regex} step"]
@@ -322,11 +188,17 @@ def get_chatbot_response(user_input, model):
                 for current_usage in current_usage_list:
                     if ingredient in current_usage.get("ingredient_name"):
                         output = "You will need " + current_usage.get("quantity") + " " + current_usage.get("unit") + "."
+                        model.output_history.append(current_usage.get("quantity") + " " + current_usage.get("unit") + " " + current_usage.get("ingredient_name"))
                         break
             count+=1
         
         if output == "":
             output = "I'm not sure right now. Let me know if you would like to see the ingredients list."
+
+    # elif re.search(descriptor_regex, user_input):
+    #     output = ""
+    #     ingredient = re.search(quantity_regex, user_input).group(5)
+    #     for i in model.steps_list[model.current_step].details.get("ingredients"):
 
     elif matching_regex:
         matches = re.search(matching_regex, user_input)
@@ -337,6 +209,7 @@ def get_chatbot_response(user_input, model):
             model.current_step = step_num - 1
             model.in_steps = True
             output = f"The {matches.group('ordinal')} step is: " + model.steps_list[model.current_step].text
+            model.output_history.append(model.steps_list[model.current_step].text)
 
     
     # what tools do i need for this recipe?
@@ -346,6 +219,7 @@ def get_chatbot_response(user_input, model):
             if step.details.get("tools"):
                 for t in step.details["tools"]:
                     output += "\n" + t
+                model.output_history.append(output)
         if output == "For this recipe, you will need:":
             output = "Sorry, I'm having trouble retrieving that information right now. Would you like to ask another question?"
         
@@ -357,6 +231,7 @@ def get_chatbot_response(user_input, model):
             output = "For this step, you will need:"
             for t in model.steps_list[model.current_step].details["tools"]:
                 output += "\n" + t
+            model.output_history.append(output)
         else:
             output = "I don't believe you need any new tools right now. Let me know if you would like to repeat the step."
         
@@ -366,6 +241,7 @@ def get_chatbot_response(user_input, model):
             output = "We haven't looked at the steps yet."
         elif model.steps_list[model.current_step].details.get("ingredients"):
             output = format_ingredients_request(model.steps_list[model.current_step].details["ingredients"])
+            model.output_history.append(output)
         else:
             output = "I don't believe you need any new ingredients right now. Let me know if you would like me to repeat the step."
 
@@ -373,38 +249,45 @@ def get_chatbot_response(user_input, model):
     elif (("what ingredients" in user_input or "which ingredients" in user_input) and "recipe" in user_input) \
         or "ingredients list" in user_input:
         output = format_ingredients_request(model.ingredient_list)
+        model.output_history.append(output)
     
     # tell me the first step / where do i begin?
     elif any(asks in user_input for asks in first_step_asks):
         model.in_steps = True
         model.current_step = 0
         output = "The first step is: " + model.steps_list[0].text
+        model.output_history.append(output)
 
     # tell me the current step?
     elif any(asks in user_input for asks in current_step_asks):
         model.in_steps = True
         output = "The current step is: " + model.steps_list[model.current_step].text
+        model.output_history.append(output)
 
     # show me the next step
     elif any(asks in user_input for asks in next_step_asks):
         if not model.in_steps:
             output = "The first step is: " + model.steps_list[0].text
+            model.output_history.append(output)
             model.current_step = 0
         elif model.current_step + 1 >= len(model.steps_list):
             output = "There is no next step! You're done!"
         else:
             output = "The next step is: " + model.steps_list[model.current_step + 1].text
+            model.output_history.append(output)
             model.current_step += 1
     
     # show me the previous step
     elif any(asks in user_input for asks in previous_step_asks):
         if not model.in_steps:
             output = "The first step is: " + model.steps_list[0].text
+            model.output_history.append(output)
             model.current_step = 0
         elif model.current_step - 1 < 0:
             output = "There is no previous step! You're done!"
         else:
             output = "The previous step is: " + model.steps_list[model.current_step - 1].text
+            model.output_history.append(output)
             model.current_step -= 1
 
     # show me the steps list
@@ -412,6 +295,7 @@ def get_chatbot_response(user_input, model):
         output = "Sure. The steps list is as follows:\n"
         for step in model.steps_list:
             output += step.text + "\n"
+        model.output_history.append(output)
 
     # What temperature
     elif "temp" in user_input:
@@ -420,7 +304,8 @@ def get_chatbot_response(user_input, model):
         if current_step.details.get("temp") != None:
             temp_info = current_step.details["temp"]
             temps = [f"{temp['value']}{temp['unit'].upper()}" for temp in temp_info]
-            output = f"The temperature should be {'/'.join(temps)}"
+            output = f"The temperature should be : {'/'.join(temps)}"
+            model.output_history.append(output)
         else:
             # TODO: improve this response
             output = "The step you are are currently on does not have a temperature."
@@ -432,6 +317,7 @@ def get_chatbot_response(user_input, model):
             current_step = model.steps_list[current_step_num]
             if current_step.details.get("time") != None:
                 output = f"{current_step.details['time']}"
+                model.output_history.append(output)
             else:
                 output = "If you're done with the last step, you can move on to the next"
 
@@ -441,13 +327,17 @@ def get_chatbot_response(user_input, model):
         if user_input[-1] == "?":
             user_input = user_input[:-1]
         # 6 use conversation history to infer what “that” refers to. may use SpaCy to deal with it.
-        if "how to" in user_input and ("that" in user_input or "this" in user_input or "these" in user_input or "those" in user_input):
+        that_list=["that", "this", "these", "those", "them", "it"]
+        if  ("that" in user_input or "this" in user_input or "these" in user_input or "those" in user_input or "them" in user_input or "it" in user_input):
             # TODO: FIX THIS
-            reference_url = model.response_history[-1]
-            reference_url="+".join(reference_url.split(" "))
+            if model.output_history:
+                reference_url = model.output_history[-1]
+                reference_url = reference_url.split(":")[-1]
+                reference_url = reference_url.replace("\n", " ")
+                reference_url="+".join(reference_url.split(" "))
         else:
             reference_url="+".join(user_input.split(" "))
-        output = "I found a reference for you: " + find_article(user_input)
+        output = "I found a reference for you: https://www.google.com/search?q=" + reference_url
          # print("Would you like me to find a video or another reference?")
             # answer = input()
             # if answer == "yes"
@@ -463,7 +353,7 @@ def get_chatbot_response(user_input, model):
     print()
     print(output)
     print()
-    model.output_history.append(output)
+    # model.output_history.append(output)
 
     return model
 
