@@ -287,7 +287,7 @@ def get_chatbot_response(user_input, model):
     model.input_history.append(user_input)
 
     inquiries = ["how do i", "how might i", "how can i", "what can i", "what is", "how long does it take to", "what does __ mean"]
-    next_step_asks = ["next step"]
+    next_step_asks = ["next step", "what's next"]
     first_step_asks = ["1st step", "first step", "where do i begin", "how do i start", "tell me how to start"]
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
     quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i need(.+)")
@@ -359,6 +359,18 @@ def get_chatbot_response(user_input, model):
         output = "Sure. The steps list is as follows:\n"
         for step in model.steps_list:
             output += step.text + "\n"
+
+    # What temperature
+    elif "temp" in user_input:
+        current_step_num = model.current_step
+        current_step = model.steps_list[current_step_num]
+        if current_step.details.get("temp") != None:
+            temp_info = current_step.details["temp"]
+            temps = [f"{temp["value"]}{temp["unit"].upper()}" for temp in temp_info]
+            output = f"The temperature should be {"/".join(temps)}"
+        else:
+            # TODO: improve this response
+            output = "The step you are are currently on does not have a temperature."
 
     # how do i preheat the oven? (any question that requires external knowledge)
     elif any(inquiry in user_input for inquiry in inquiries):
