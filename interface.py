@@ -290,6 +290,7 @@ def get_chatbot_response(user_input, model):
     next_step_asks = ["next step", "what's next"]
     first_step_asks = ["1st step", "first step", "where do i begin", "how do i start", "tell me how to start"]
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
+    duration_asks = ["how long"] # TODO: add more duration asks
     quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i need(.+)")
 
     # how much ___ do i need?
@@ -371,6 +372,17 @@ def get_chatbot_response(user_input, model):
         else:
             # TODO: improve this response
             output = "The step you are are currently on does not have a temperature."
+
+    elif any(asks in user_input for asks in duration_asks):
+        # TODO: improve this
+        if model.current_step != None:
+            current_step_num = model.current_step
+            current_step = model.steps_list[current_step_num]
+            if current_step.details.get("time") != None:
+                output = f"{time_info}"
+            else:
+                output = "If you're done with the last step, you can move on to the next"
+
 
     # how do i preheat the oven? (any question that requires external knowledge)
     elif any(inquiry in user_input for inquiry in inquiries):
