@@ -27,3 +27,4 @@ We have built our chatbot to handle inputs/questions such as:
 - What can I use instead of oil?
 
 The chatbot is also able to handle many variations of these questions.
+We also finish the optional part of ingredient and method based on key word list and NLTK.
