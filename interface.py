@@ -87,11 +87,12 @@ def extract_number_re(text):
     return -1
 
 def format_ingredients_request(ingredients):
+    print(f"ingredients: {ingredients}")
     if ingredients == [] or ingredients == None:
         return "Sorry, I'm having trouble retrieving the list. Would you like to ask another question?\n"
     response = "Sure! You will need:"
     for ingredient in ingredients:
-        response += "\n"+ingredient["text"]
+        response += f"\n {ingredient}"
     response += "\nWhat else would you like to know?"
     return response
 

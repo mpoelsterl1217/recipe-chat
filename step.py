@@ -68,7 +68,7 @@ def parse_step(text, ingredients_list):
         word = lemmatizer.lemmatize(word)
         if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)) or in_tools_list(word) :
             for ingredient in ingredients_list:
-                for j in ingredient.get("ingredient_name",""):
+                for j in ingredient.ingredient_name:
                     if (word in j) and (ingredient not in final_ingredients):
                         final_ingredients.append(ingredient)
             

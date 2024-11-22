@@ -1,3 +1,4 @@
+from ingredient import Ingredient
 # import re
 
 # pattern = r"""
@@ -110,10 +111,10 @@ def parse_ingredient(line):
     measurement = []
     # Extract quantity (numbers or fractions)
     for word, tag in tagged:
-        match = re.match(r"(\d+/\d+|\d*\.\d+|\d+)", word)
-        if tag == "CD":
-            if word.isdigit() or fraction_verify(word) or match:
-                quantity.append(word)
+        match = re.match(r"(\d+/\d+)|(\d*\.\d+)|(\d+)|[\u00BC-\u00BE\u2150-\u215E]", word)
+        #if tag == "CD":
+        if word.isdigit() or fraction_verify(word) or match:
+            quantity.append(word)
     
     # Extract measurement (including plural forms)
     for word in tokens:
@@ -152,13 +153,18 @@ def parse_ingredient(line):
             ingredient_name.append(i)
 
     
-    return {
-        "quantity": quantity if quantity else None,
-        "measurement": measurement if measurement else None,
-        "descriptor": descriptors if descriptors else None,
-        "ingredient_name": ingredient_name if ingredient_name else None,
-        "preparation": preparations if preparations else None
-    }
+    #return {
+    #    "quantity": quantity if quantity else None,
+    #    "measurement": measurement if measurement else None,
+    #    "descriptor": descriptors if descriptors else None,
+    #    "ingredient_name": ingredient_name if ingredient_name else None,
+    #    "preparation": preparations if preparations else None
+    #}
+    return Ingredient(" ".join(quantity).strip() if quantity else None,
+        " ".join(measurement).strip() if measurement else None,
+        " ".join(descriptors).strip() if descriptors else None,
+        " ".join(ingredient_name).strip() if ingredient_name else None,
+        " ".join(preparations).strip() if preparations else None)
 
 def parse_ingredients(ingredients):
     result = []
