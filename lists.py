@@ -8,7 +8,7 @@ cooking_verbs = [
     "Plate", "Garnish", "Drizzle", "Sprinkle", "Glaze", "Toast",
     "Melt", "Set", "Reduce", "Thicken", "Zest",
     "Smoke", "Cure", "Dry", "Freeze", "Shake", "Refrigerate", "Squeeze",
-    "Heat", "Microwave", "cover", "top", "Spread"
+    "Heat", "Microwave", "cover", "top", "Spread", "Arrange", "stirring"
 ]
 cooking_verbs = [item.lower() for item in cooking_verbs]
 
@@ -38,4 +38,7 @@ cooking_tools = [item.lower() for item in cooking_tools]
 def in_verbs_list(word):
     return word in cooking_verbs
 def in_tools_list(word):
+    for i in cooking_tools:
+        if i in word:
+            return True
     return word in cooking_tools

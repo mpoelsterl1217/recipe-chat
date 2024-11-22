@@ -54,12 +54,18 @@ def parse_step(text, ingredients_list):
 
     ingredients, actions, tools, time, temp = [], [], [], [], []
     # print("doc", doc)
+
+    # tool may not just one word
+    for chunk in doc.noun_chunks:
+        chunk_text = chunk.text.lower()
+        if in_tools_list(chunk_text) or is_cooking_tool(chunk_text):
+                tools.append(chunk_text)
+
     final_ingredients=[]
     for ent in doc:
         # print(ent)
         word = ent.text.lower()
-        # if word=="oven":
-        #     print("oven  ", ent.pos_)
+        word = lemmatizer.lemmatize(word)
         if ent.pos_ in ["NOUN", "PROPN"] and (not in_verbs_list(word)) or in_tools_list(word) :
             for ingredient in ingredients_list:
                 for j in ingredient.get("ingredient_name",""):
@@ -67,7 +73,8 @@ def parse_step(text, ingredients_list):
                         final_ingredients.append(ingredient)
             
             if in_tools_list(word) or is_cooking_tool(word):
-                tools.append(word)
+                if not word in tools:
+                    tools.append(word)
         if ent.pos_ in ["VERB", "ROOT"] or in_verbs_list(word):
             if in_verbs_list(word) or is_cooking_action(word):
                 actions.append(word)
@@ -202,9 +209,9 @@ def extract_quantity_unit_pairs(sentence):
     return quantity_unit_pairs
 
 
-test = Step(1, "Top with 4 more noodles and remaining ricotta mixture.",[])
+test = Step(1, "Arrange in a single layer on a rimmed baking sheet.",[])
 
-# test = Step(1, "Top with remaining 4 noodles and 1 cup marinara.",[])
+# test = Step(1, "Bake in the preheated oven until softened and lightly browned, 15 to 20 minutes.",[])
 
 print(test.details)
 print(test.text)
