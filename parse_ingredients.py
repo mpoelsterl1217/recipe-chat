@@ -137,7 +137,7 @@ def parse_ingredient(line):
         if (word not in exclude) and (not re.match(r'[^\w\s]', word)) and is_food(word):
             name.append(word)
     
-    print(name)
+    # print(name)
     ingredient_name = list(set(clean_nouns(name, doc)))
 
     
@@ -195,5 +195,5 @@ def clean_nouns(words, doc):
 #     print(final)
 #     print()
 
-final = parse_ingredient("2 cloves garlic, minced")
-print(final)
+# final = parse_ingredient("2 cloves garlic, minced")
+# print(final)

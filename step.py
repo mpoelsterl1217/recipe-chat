@@ -162,6 +162,6 @@ def clean_nouns(words, doc):
 
 test = Step(1, "Place the skillet in the preheated oven and bake until cheese is melted and slightly brown, 15 to 20 minutes.",[])
 
-print(test.details)
-print(test.text)
-print(test.step_num)
+# print(test.details)
+# print(test.text)
+# print(test.step_num)
