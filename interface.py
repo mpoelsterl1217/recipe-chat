@@ -290,7 +290,7 @@ def get_chatbot_response(user_input, model):
     next_step_asks = ["next step", "what's next"]
     first_step_asks = ["1st step", "first step", "where do i begin", "how do i start", "tell me how to start"]
     all_step_asks = ["all the steps", "every step", "the whole steps list", "show me the steps"]
-    duration_asks = ["how long"] # TODO: add more duration asks
+    duration_asks = ["how long", "how much time"] # TODO: add more duration asks
     quantity_regex = re.compile("how (much|many|much of|many of) (.+) do i need(.+)")
 
     # how much ___ do i need?
