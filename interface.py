@@ -8,6 +8,7 @@ from step import Step
 from parse_ingredients import parse_ingredients
 from model_state import State
 from nltk.tokenize import sent_tokenize
+from stanford_parser import IngredientParser
 
 def grab_info(response):
     # todo
@@ -87,7 +88,6 @@ def extract_number_re(text):
     return -1
 
 def format_ingredients_request(ingredients):
-    print(f"ingredients: {ingredients}")
     if ingredients == [] or ingredients == None:
         return "Sorry, I'm having trouble retrieving the list. Would you like to ask another question?\n"
     response = "Sure! You will need:"
@@ -322,6 +322,7 @@ def get_chatbot_response(user_input, model):
             # TODO: improve this response
             output = "The step you are are currently on does not have a temperature."
 
+
     elif any(asks in user_input for asks in duration_asks):
         # TODO: improve this
         if model.current_step != None:
@@ -333,11 +334,22 @@ def get_chatbot_response(user_input, model):
             else:
                 output = "If you're done with the last step, you can move on to the next"
 
+    
 
     # how do i preheat the oven? (any question that requires external knowledge)
     elif any(inquiry in user_input for inquiry in inquiries):
         if user_input[-1] == "?":
             user_input = user_input[:-1]
+
+        '''
+        parser = IngredientParser()
+        tree = parser.parse(user_input)
+        wh_tag = tree[0][0].label()
+        if wh_tag == "WHADVP:
+            # lookig for a verb or adjective
+        elif wh_tag = "WDT":
+            # looking for a noun
+       ''' 
         # 6 use conversation history to infer what “that” refers to. may use SpaCy to deal with it.
         that_list=["that", "this", "these", "those", "them", "it"]
         if  ("that" in user_input or "this" in user_input or "these" in user_input or "those" in user_input or "them" in user_input or "it" in user_input):

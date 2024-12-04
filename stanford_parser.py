@@ -20,6 +20,7 @@ class IngredientParser:
         self.server = nltk.parse.corenlp.CoreNLPServer(path_to_jar=str(parser_path), path_to_models_jar=str(model_path))
         self.server.start()
         self.parser = nltk.parse.corenlp.CoreNLPParser(url='http://localhost:9000')
+        self.dep_parser = nltk.parse.corenlp.CoreNLPDependencyParser(url='http://localhost:9000')
 
     def __del__(self):
         self.server.stop()
@@ -91,7 +92,7 @@ class IngredientParser:
                 if nml_phrase[1].label().startswith("NN"): # Cardinal numeral is followed by noun, assumed to be unit
                     return [nml_phrase[0][-1], nml_phrase[1][-1]]
                 return [nml_phrase[0][-1], ""]
-            
+        
         raise Exception(f"uh oh, could not find quantity and unit in {ingredient_phrase}")
 
 
@@ -110,6 +111,10 @@ class IngredientParser:
         
         raise Exception(f"uh oh, could not find preparation phrase in {tree}")
 
+    def parse(self, text):
+        parse_tree = next(self.parser.raw_parse(text))
+
+        return parse_tree
 
 
 # if __name__ == "__main__":
